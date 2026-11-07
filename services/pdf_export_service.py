@@ -148,7 +148,8 @@ class PDFExportService:
 
     def generate_executive_digest(self, output_path: str = "outputs/weekly_discovery_digest.pdf") -> str:
         """Generate executive research digest PDF."""
-        conn = sqlite3.connect(self.db_path)
+        from database.connection import get_db
+        conn = get_db().get_raw_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM reviews WHERE eligibility_status = 'ELIGIBLE'")
@@ -231,7 +232,8 @@ class PDFExportService:
 
     def generate_opportunity_report(self, output_path: str = "outputs/opportunity_report.pdf") -> str:
         """Generate opportunity dossier report PDF."""
-        conn = sqlite3.connect(self.db_path)
+        from database.connection import get_db
+        conn = get_db().get_raw_connection()
         df_opps = pd.read_sql_query("SELECT * FROM opportunities ORDER BY priority_rank ASC", conn)
         conn.close()
 

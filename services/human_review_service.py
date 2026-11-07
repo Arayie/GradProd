@@ -24,7 +24,9 @@ class HumanReviewService:
         self.db_path = db_path
 
     def get_connection(self):
-        from database.connection import get_db
+        from database.connection import DatabaseConnection, get_db
+        if self.db_path and not self.db_path.endswith("growww_discovery.db"):
+            return DatabaseConnection(self.db_path).get_raw_connection()
         return get_db().get_raw_connection()
 
     def assemble_validation_sample(

@@ -31,11 +31,11 @@ class OpportunityService:
             db_path = os.path.join(base_dir, "growww_discovery.db")
         self.db_path = db_path
 
-    def get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON;")
-        return conn
+    def get_connection(self):
+        from database.connection import DatabaseConnection, get_db
+        if self.db_path and not self.db_path.endswith("growww_discovery.db"):
+            return DatabaseConnection(self.db_path).get_raw_connection()
+        return get_db().get_raw_connection()
 
     def get_all_opportunities(
         self,
