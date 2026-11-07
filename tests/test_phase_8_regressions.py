@@ -164,3 +164,20 @@ def test_regression_issue_6_all_16_pages_render_cleanly():
 
     for page in all_pages:
         page.render()
+
+
+def test_regression_issue_7_analytics_independent_imports():
+    """Verify that all analytics submodules can be imported independently without eager circular evaluation."""
+    import analytics.benchmarking
+    import analytics.lifecycle_analytics
+    import analytics.opportunity_scoring
+    import analytics.retention_modeling
+    import analytics.theme_frequency
+    import core.database_manager
+
+    assert hasattr(analytics.benchmarking, "CrossAppBenchmarkEngine")
+    assert hasattr(analytics.lifecycle_analytics, "LifecycleAnalyticsEngine")
+    assert hasattr(analytics.opportunity_scoring, "OpportunityScoringEngine")
+    assert hasattr(analytics.retention_modeling, "RetentionHypothesisEngine")
+    assert hasattr(analytics.theme_frequency, "ThemeFrequencyEngine")
+
