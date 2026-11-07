@@ -6,10 +6,10 @@ import os
 import sys
 from typing import Dict, Any
 
-# Ensure local workspace packages in lib/ are available
-LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "lib"))
-if os.path.exists(LIB_DIR) and LIB_DIR not in sys.path:
-    sys.path.insert(0, LIB_DIR)
+# Ensure workspace root is always at the front of sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 from database.connection import DatabaseConnection, get_db
 from database.repositories import (
@@ -31,11 +31,18 @@ class DatabaseManager:
         self.run_repo = IngestionRunRepository(self.db)
         self.checkpoint_repo = CheckpointRepository(self.db)
 
+    def get_connection(self):
+        """Returns managed connection context from the underlying DatabaseConnection."""
+        return self.db.get_connection()
+
+    def get_cursor(self):
+        """Returns managed cursor context from the underlying DatabaseConnection."""
+        return self.db.get_cursor()
+
     def initialize(self):
-        """Creates tables, indexes, and syncs YAML configurations into SQLite."""
-        if not getattr(self.db, "is_postgres", False):
-            self.db.initialize_schema()
-            self.sync_configurations()
+        """Creates tables, indexes, and syncs YAML configurations."""
+        self.db.initialize_schema()
+        self.sync_configurations()
 
     def sync_configurations(self):
         """Reads apps.yml and source_access.yml and syncs to database."""

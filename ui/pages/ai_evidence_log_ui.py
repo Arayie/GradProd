@@ -70,8 +70,8 @@ def render():
         e.confidence_overall, e.confidence_tier, e.routing_decision,
         e.evidence_grounding_status, e.adjudication_status, e.model_provider,
         e.model_id, e.prompt_hash, e.taxonomy_version, e.classification_timestamp,
-        e.pain_points, e.verbatim_evidence_spans,
-        r.review_text, r.star_rating, r.source_store
+        e.pain_points, e.evidence_spans AS verbatim_evidence_spans,
+        r.review_text, r.star_rating, r.store AS source_store
     FROM ai_evidence_log e
     JOIN reviews r ON e.evidence_id = r.evidence_id
     WHERE 1=1

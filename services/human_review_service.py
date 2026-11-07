@@ -23,11 +23,9 @@ class HumanReviewService:
             db_path = os.path.join(base_dir, "growww_discovery.db")
         self.db_path = db_path
 
-    def get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON;")
-        return conn
+    def get_connection(self):
+        from database.connection import get_db
+        return get_db().get_raw_connection()
 
     def assemble_validation_sample(
         self,
@@ -179,6 +177,72 @@ class HumanReviewService:
             ORDER BY 
                 CASE WHEN e.routing_decision = 'MANDATORY_REVIEW' THEN 1 ELSE 2 END ASC,
                 e.confidence_overall ASC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        rows = cursor.fetchall()
+        result = [dict(r) for r in rows]
+        conn.close()
+        return result
+
+    def accept_enrichment(self, enr_id: str, ev_id: str, adjudicator_id: str, rationale: str) -> int:
+        """Accepts all AI predictions for an enrichment record."""
+        return self.record_adjudication(
+            evidence_id=ev_id,
+            enrichment_id=enr_id,
+            adjudicator_id=adjudicator_id,
+            action="ACCEPT",
+            dimension="lifecycle_stage",
+            original_labels=[],
+            adjudicated_labels=[],
+            rationale=rationale,
+        )
+
+    def correct_enrichment(
+        self,
+        enr_id: str,
+        ev_id: str,
+        adjudicator_id: str,
+        dimension: str,
+        corrected_labels: List[str],
+        rationale: str,
+    ) -> int:
+        """Records a human correction override for an enrichment record."""
+        return self.record_adjudication(
+            evidence_id=ev_id,
+            enrichment_id=enr_id,
+            adjudicator_id=adjudicator_id,
+            action="CORRECT",
+            dimension=dimension,
+            original_labels=[],
+            adjudicated_labels=corrected_labels,
+            rationale=rationale,
+        )
+
+    def reject_enrichment(self, enr_id: str, ev_id: str, adjudicator_id: str, rationale: str) -> int:
+        """Marks an enrichment record as rejected/irrelevant."""
+        return self.record_adjudication(
+            evidence_id=ev_id,
+            enrichment_id=enr_id,
+            adjudicator_id=adjudicator_id,
+            action="REJECT",
+            dimension="lifecycle_stage",
+            original_labels=[],
+            adjudicated_labels=["REJECTED"],
+            rationale=rationale,
+        )
+
+    def get_adjudication_history(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Retrieves recent human adjudication decisions."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT adjudication_id, evidence_id, enrichment_id, adjudicator_id, adjudication_action,
+                   dimension, adjudicated_labels, rationale, adjudicated_at
+            FROM human_adjudications
+            ORDER BY adjudicated_at DESC
             LIMIT ?
             """,
             (limit,),

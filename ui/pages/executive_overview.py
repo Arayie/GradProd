@@ -161,8 +161,8 @@ def render():
             st.markdown(f"""
                 <div style="background-color: #FFFFFF; border-left: 4px solid #00D09C; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0.85rem 1.1rem; margin-bottom: 0.6rem;">
                     <div style="display: flex; justify-content: space-between;">
-                        <span style="font-weight: 700; color: #0F172A;">#{opp['priority_rank']} [{opp['opportunity_id']}] {opp['opportunity_title']}</span>
-                        <span style="background-color: #00D09C22; color: #065F46; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 700; font-size: 0.82rem;">Score: {opp['opportunity_score']:.2f}</span>
+                        <span style="font-weight: 700; color: #0F172A;">#{opp.get('priority_rank', '')} [{opp.get('opportunity_id', '')}] {opp.get('title', opp.get('opportunity_title', 'Opportunity'))}</span>
+                        <span style="background-color: #00D09C22; color: #065F46; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 700; font-size: 0.82rem;">Score: {float(opp.get('opportunity_score', 0)):.2f}</span>
                     </div>
                     <div style="color: #475569; font-size: 0.88rem; margin-top: 0.35rem;">{opp['problem_statement'][:130]}...</div>
                 </div>

@@ -7,12 +7,12 @@ import sys
 import sqlite3
 from contextlib import contextmanager
 
-# Ensure local workspace packages in lib/ are available
-LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "lib"))
-if os.path.exists(LIB_DIR) and LIB_DIR not in sys.path:
-    sys.path.insert(0, LIB_DIR)
+# Ensure workspace root is always at the front of sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
-DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "growww_discovery.db")
+DEFAULT_DB_PATH = os.path.join(REPO_ROOT, "growww_discovery.db")
 
 class DictRow(dict):
     """Row object supporting both dictionary key access and tuple integer index access."""
@@ -85,26 +85,72 @@ class ConnectionWrapper:
     def __getattr__(self, name):
         return getattr(self._raw_conn, name)
 
-def normalize_database_url(url: str) -> str:
-    """Normalizes PostgreSQL URL for SQLAlchemy and auto-detects installed driver."""
-    normalized = url
-    if normalized.startswith("postgres://"):
-        normalized = normalized.replace("postgres://", "postgresql://", 1)
+def mask_connection_url(url: str) -> str:
+    """Masks database password in connection string for safe logging and error reporting."""
+    if not url:
+        return ""
+    if "@" in url and "://" in url:
+        prefix, rest = url.split("://", 1)
+        auth, host_db = rest.split("@", 1)
+        if ":" in auth:
+            user, _ = auth.split(":", 1)
+            return f"{prefix}://{user}:****@{host_db}"
+    return url
 
-    if normalized.startswith("postgresql://") and not normalized.startswith("postgresql+"):
-        try:
-            import psycopg2
-        except ImportError:
-            try:
-                import pg8000
-                normalized = normalized.replace("postgresql://", "postgresql+pg8000://", 1)
-            except ImportError:
-                try:
-                    import psycopg
-                    normalized = normalized.replace("postgresql://", "postgresql+psycopg://", 1)
-                except ImportError:
-                    pass
+def normalize_database_url(url: str) -> str:
+    """Normalizes PostgreSQL URL for SQLAlchemy using the explicit psycopg2 driver."""
+    if not url:
+        return url
+    normalized = url.strip()
+    if normalized.startswith("postgres://"):
+        normalized = normalized.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif normalized.startswith("postgresql://") and not normalized.startswith("postgresql+"):
+        normalized = normalized.replace("postgresql://", "postgresql+psycopg2://", 1)
     return normalized
+
+class ManagedConnectionContext:
+    """Provides a managed connection supporting both context manager usage and direct method access."""
+    def __init__(self, db: "DatabaseConnection"):
+        self._db = db
+        self._conn = None
+
+    def __enter__(self):
+        self._conn = self._db.get_raw_connection()
+        return self._conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._conn is not None:
+            try:
+                if exc_type is not None:
+                    self._conn.rollback()
+                else:
+                    self._conn.commit()
+            finally:
+                self._conn.close()
+                self._conn = None
+
+    def cursor(self, *args, **kwargs):
+        if self._conn is None:
+            self._conn = self._db.get_raw_connection()
+        return self._conn.cursor(*args, **kwargs)
+
+    def commit(self):
+        if self._conn is not None:
+            self._conn.commit()
+
+    def rollback(self):
+        if self._conn is not None:
+            self._conn.rollback()
+
+    def close(self):
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def __getattr__(self, name):
+        if self._conn is None:
+            self._conn = self._db.get_raw_connection()
+        return getattr(self._conn, name)
 
 def parse_database_url(url: str = None) -> str:
     """Resolves database file path from DATABASE_URL or DATABASE_PATH env var."""
@@ -120,7 +166,11 @@ class DatabaseConnection:
 
     def __init__(self, db_path: str = None):
         self.raw_url = os.getenv("DATABASE_URL", "")
-        self.is_postgres = self.raw_url.startswith("postgres://") or self.raw_url.startswith("postgresql://")
+        self.is_postgres = (
+            self.raw_url.startswith("postgres://") or
+            self.raw_url.startswith("postgresql://") or
+            self.raw_url.startswith("postgresql+")
+        )
         self.db_path = db_path or parse_database_url(self.raw_url)
         if not self.is_postgres:
             self._ensure_directory()
@@ -134,7 +184,7 @@ class DatabaseConnection:
     def get_raw_connection(self):
         """Returns a configured connection with foreign keys and WAL mode enabled."""
         if self.is_postgres:
-            # PostgreSQL connection adapter via SQLAlchemy
+            # PostgreSQL connection adapter via SQLAlchemy with explicit psycopg2 driver
             from sqlalchemy import create_engine
             normalized_url = normalize_database_url(self.raw_url)
             try:
@@ -142,13 +192,12 @@ class DatabaseConnection:
                 raw_conn = engine.raw_connection()
                 return ConnectionWrapper(raw_conn, is_postgres=True)
             except Exception as exc:
-                import logging
-                logging.getLogger("database").warning(
-                    f"PostgreSQL connection failed ({exc}). Gracefully falling back to local SQLite at {DEFAULT_DB_PATH}."
-                )
-                self.is_postgres = False
-                self.db_path = DEFAULT_DB_PATH
-                return self.get_raw_connection()
+                masked = mask_connection_url(self.raw_url)
+                # In production mode, NEVER silently fall back to local SQLite
+                raise RuntimeError(
+                    f"Production PostgreSQL database connection failed ({masked}): {exc}. "
+                    f"Verify DATABASE_URL and Render database status."
+                ) from exc
 
         conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         conn.row_factory = sqlite3.Row
@@ -158,18 +207,9 @@ class DatabaseConnection:
         conn.execute("PRAGMA busy_timeout = 30000;")
         return conn
 
-    @contextmanager
-    def get_connection(self):
-        """Context manager yielding a managed connection with auto-commit and rollback."""
-        conn = self.get_raw_connection()
-        try:
-            yield conn
-            conn.commit()
-        except Exception:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
+    def get_connection(self) -> ManagedConnectionContext:
+        """Returns a managed connection context supporting with-statement and direct calls."""
+        return ManagedConnectionContext(self)
 
     @contextmanager
     def get_cursor(self):
@@ -184,8 +224,51 @@ class DatabaseConnection:
     def initialize_schema(self, schema_file: str = None):
         """Executes the DDL schema to create tables and indexes."""
         if self.is_postgres:
-            # PostgreSQL schema is managed via migration scripts
+            self._initialize_postgres_schema()
             return
+
+        if schema_file is None:
+            schema_file = os.path.join(os.path.dirname(__file__), "schema.sql")
+
+        if not os.path.exists(schema_file):
+            raise FileNotFoundError(f"Schema definition file not found at: {schema_file}")
+
+        with open(schema_file, "r", encoding="utf-8") as f:
+            ddl_script = f.read()
+
+        with self.get_connection() as conn:
+            conn.executescript(ddl_script)
+
+        self.migrate_phase_3_columns()
+
+    def _initialize_postgres_schema(self):
+        """Ensures PostgreSQL schema tables and indexes exist without dropping existing data."""
+        from sqlalchemy import create_engine, text
+        normalized_url = normalize_database_url(self.raw_url)
+        engine = create_engine(normalized_url)
+
+        try:
+            with engine.connect() as conn:
+                # Check if tables already exist
+                table_exists = conn.execute(text("SELECT to_regclass('public.reviews');")).scalar()
+                if table_exists:
+                    return
+
+                # If brand new database, apply DDL statements individually
+                from scripts.migrate_sqlite_to_postgres import generate_postgres_ddl_list
+                sqlite_conn = sqlite3.connect(DEFAULT_DB_PATH)
+                stmts = generate_postgres_ddl_list(sqlite_conn)
+                sqlite_conn.close()
+
+                for stmt in stmts:
+                    try:
+                        conn.execute(text(stmt))
+                        conn.commit()
+                    except Exception:
+                        conn.rollback()
+        except Exception as exc:
+            import logging
+            logging.getLogger("database").error(f"PostgreSQL schema initialization check: {exc}")
 
         if schema_file is None:
             schema_file = os.path.join(os.path.dirname(__file__), "schema.sql")

@@ -95,7 +95,8 @@ def render():
     with col_p2:
         ai_intent = json.loads(current_item["investor_intent"]) if current_item["investor_intent"] else []
         st.write(f"**Predicted Intent:** {ai_intent}")
-        spans = json.loads(current_item["verbatim_evidence_spans"]) if current_item["verbatim_evidence_spans"] else []
+        spans_raw = current_item.get("evidence_spans") or current_item.get("verbatim_evidence_spans")
+        spans = json.loads(spans_raw) if spans_raw else []
         st.write(f"**Verbatim Evidence Spans:** {spans}")
 
     st.markdown("---")
