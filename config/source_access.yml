@@ -1,0 +1,233 @@
+# Groww AI-Powered Investor Discovery Engine
+# Source Access and Permission Configuration Register
+# Schema Version: 1.0.0
+# Last Updated: 2026-11-05T13:42:00Z
+#
+# POLICY GOVERNANCE NOTE:
+# Every source connector MUST remain DISABLED by default (enabled: false)
+# until both technical feasibility and legal/data-governance permissions
+# are verified and signed off. Public availability != legal consent.
+
+version: "1.0.0"
+governance_policy_reference: "docs/privacy_and_retention.md"
+default_state: "DISABLED"
+
+permission_states:
+  - "NOT_REVIEWED"
+  - "PENDING_VERIFICATION"
+  - "APPROVED"
+  - "REJECTED"
+  - "UNAVAILABLE"
+
+sources:
+  - source_id: "apple_app_store_public_rss"
+    source_name: "Apple App Store Public Customer Reviews RSS"
+    source_family: "apple_app_store"
+    collection_method: "public_syndication_rss"
+    route_code: "ROUTE_A"
+    app_scope: "all_registered_apps"
+    account_ownership_required: false
+    technical_availability: "AVAILABLE"
+    permission_status: "APPROVED"
+    enabled: false
+    allowed_fields:
+      - "review_id"
+      - "title"
+      - "review_text"
+      - "star_rating"
+      - "review_date"
+      - "app_version"
+      - "storefront"
+      - "source_url"
+      - "vote_count"
+      - "vote_sum"
+    disallowed_fields:
+      - "author_name"
+      - "author_uri"
+      - "reviewer_identity"
+    data_retention_requirements: >
+      Retention capped at research prototype lifecycle. Review text stored only for NLP feature extraction.
+      Author identities redacted at source parser before database persistence.
+    commercial_use_restrictions: >
+      Apple iTunes Terms of Service permit public syndication consumption for personal/informational purposes;
+      commercial redistribution or public republishing of raw feeds requires review by legal counsel.
+    ai_processing_permission_status: "APPROVED"
+    provider_limitations: >
+      Enforces a strict 10-page hard limit (500 reviews max per application per country storefront).
+      Does not support deep historical pagination. No customer identity linking.
+    last_verification_date: "2026-11-06"
+    approval_reference: "PHASE2-AUDIT-APPLE-RSS-001"
+    connector_class: "GrowwEngine.Connectors.AppleRSSConnector"
+
+  - source_id: "apple_app_store_connect_owner_api"
+    source_name: "Apple App Store Connect API (Customer Reviews)"
+    source_family: "apple_app_store"
+    collection_method: "authenticated_rest_api"
+    app_scope: "owned_apps_only"
+    account_ownership_required: true
+    technical_availability: "AVAILABLE"
+    permission_status: "UNAVAILABLE"
+    enabled: false
+    allowed_fields:
+      - "review_id"
+      - "title"
+      - "review_text"
+      - "star_rating"
+      - "created_date"
+      - "app_version"
+      - "territory"
+      - "developer_response"
+    disallowed_fields:
+      - "customer_apple_id"
+      - "customer_real_name"
+    data_retention_requirements: >
+      Requires adherence to Apple Developer Program License Agreement (DPLA).
+    commercial_use_restrictions: >
+      Requires active Apple Developer Program account with Admin or Customer Support roles for the target app.
+    ai_processing_permission_status: "NOT_REVIEWED"
+    provider_limitations: >
+      Only accessible for apps directly owned by the developer account. Cannot be used to access competitor reviews (e.g. Zerodha, Upstox).
+    last_verification_date: "2026-11-05"
+    approval_reference: "PHASE0-AUDIT-APPLE-CONNECT-002"
+    connector_class: "GrowwEngine.Connectors.AppStoreConnectConnector"
+
+  - source_id: "google_play_appfollow_connector"
+    source_name: "AppFollow Competitor Reviews Feed & API (REJECTED)"
+    source_family: "appfollow"
+    collection_method: "third_party_saas_api"
+    route_code: "APPFOLLOW_REJECTED"
+    app_scope: "competitor_and_target_apps"
+    account_ownership_required: false
+    technical_availability: "UNAVAILABLE"
+    permission_status: "REJECTED"
+    enabled: false
+    allowed_fields:
+      - "review_id"
+      - "review_text"
+      - "star_rating"
+      - "review_date"
+      - "app_version"
+      - "language"
+      - "device_type"
+    disallowed_fields:
+      - "author_name"
+      - "author_avatar_url"
+    data_retention_requirements: >
+      Compliant with AppFollow Terms of Service and API End-User License Agreement. Cached reviews must be purged upon provider contract termination.
+    commercial_use_restrictions: >
+      PERMANENTLY REJECTED FOR FREE TIER: User manual verification confirmed on 2026-11-05 that AppFollow demands a mandatory
+      paid subscription ($143+/mo) to access competitor review feeds, monitoring, and exports.
+    ai_processing_permission_status: "REJECTED"
+    provider_limitations: >
+      Requires paid subscription ($143+/month). Free tier is not viable for competitor review collection.
+    last_verification_date: "2026-11-06"
+    approval_reference: "PHASE0-AUDIT-APPFOLLOW-REJECTED-003"
+    connector_class: "GrowwEngine.Connectors.AppFollowConnector"
+
+  - source_id: "google_play_android_publisher_owner_api"
+    source_name: "Google Play Developer API (Android Publisher v3)"
+    source_family: "google_play_store"
+    collection_method: "authenticated_rest_api"
+    route_code: "ROUTE_C"
+    app_scope: "owned_apps_only"
+    account_ownership_required: true
+    technical_availability: "AVAILABLE"
+    permission_status: "UNAVAILABLE"
+    enabled: false
+    allowed_fields:
+      - "review_id"
+      - "author_name_redacted"
+      - "review_text"
+      - "star_rating"
+      - "last_modified_timestamp"
+      - "app_version_code"
+      - "app_version_name"
+      - "device_metadata"
+      - "developer_comment"
+    disallowed_fields:
+      - "google_account_id"
+      - "raw_author_display_name"
+    data_retention_requirements: >
+      Adherence to Google Play Developer Distribution Agreement (DDA) and Google Cloud Platform service terms.
+    commercial_use_restrictions: >
+      Requires Google Cloud service account with 'View app information and download bulk reports' permissions in Google Play Console.
+    ai_processing_permission_status: "NOT_REVIEWED"
+    provider_limitations: >
+      Strictly restricted to apps within the publisher's Google Play Console account. Competitor app reviews cannot be queried.
+    last_verification_date: "2026-11-06"
+    approval_reference: "PHASE2-AUDIT-PLAY-PUBLISHER-004"
+    connector_class: "GrowwEngine.Connectors.GooglePlayPublisherConnector"
+
+  - source_id: "google_play_console_csv_export"
+    source_name: "Google Play Console Bulk Reviews CSV Export"
+    source_family: "google_play_store"
+    collection_method: "manual_console_export"
+    route_code: "ROUTE_D"
+    app_scope: "owned_apps_only"
+    account_ownership_required: true
+    technical_availability: "AVAILABLE"
+    permission_status: "UNAVAILABLE"
+    enabled: false
+    allowed_fields:
+      - "package_name"
+      - "app_version_code"
+      - "app_version_name"
+      - "reviewer_language"
+      - "device"
+      - "review_submit_date_and_time"
+      - "review_last_update_date_and_time"
+      - "star_rating"
+      - "review_title"
+      - "review_text"
+      - "developer_reply_date_and_time"
+      - "developer_reply_text"
+    disallowed_fields:
+      - "reviewer_name"
+      - "review_link_identifying_user"
+    data_retention_requirements: >
+      Internal proprietary data. Must be stored in isolated encrypted storage with role-based access.
+    commercial_use_restrictions: >
+      Internal organizational data; requires explicit data protection officer (DPO) and Groww management approval.
+    ai_processing_permission_status: "NOT_REVIEWED"
+    provider_limitations: >
+      Only available to account administrators. Cannot obtain competitor data.
+    last_verification_date: "2026-11-06"
+    approval_reference: "PHASE2-AUDIT-PLAY-CSV-005"
+    connector_class: "GrowwEngine.Connectors.PlayConsoleCSVImporter"
+
+  - source_id: "manual_review_csv_import"
+    source_name: "Manual Review CSV Import (Google Play Competitor & Fallback)"
+    source_family: "manual_import"
+    collection_method: "file_upload"
+    route_code: "ROUTE_B"
+    app_scope: "all_registered_apps"
+    account_ownership_required: false
+    technical_availability: "AVAILABLE"
+    permission_status: "APPROVED"
+    enabled: false
+    allowed_fields:
+      - "review_id"
+      - "app_name"
+      - "platform"
+      - "star_rating"
+      - "review_date"
+      - "app_version"
+      - "review_title"
+      - "review_text"
+    disallowed_fields:
+      - "user_name"
+      - "phone_number"
+      - "email"
+      - "bank_account_number"
+      - "pan_number"
+      - "customer_id"
+    data_retention_requirements: >
+      Schema validation enforced on upload. Automatic PII regex scanning on import. Redacted review text retained for analysis.
+    commercial_use_restrictions: >
+      Import files must be sourced from publicly legitimate datasets, academic archives, or internal exports with verified provenance.
+    ai_processing_permission_status: "APPROVED"
+    provider_limitations: >
+      Manual operation. File size limit 50MB. Requires human data custodian validation prior to ingestion.
+    last_verification_date: "2026-11-06"
+    approval_reference: "PHASE2-AUDIT-MANUAL-CSV-006"
+    connector_class: "GrowwEngine.Connectors.ManualCSVImporter"

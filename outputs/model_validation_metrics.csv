@@ -1,0 +1,5 @@
+dimension,macro_f1,cohens_kappa,accuracy,target_gate,status
+Pain-Point Classification,0.815,0.8551,0.91,"Macro F1 >= 0.80, κ >= 0.70",PASS
+Lifecycle Stage Mapping,0.8586,0.8471,0.9167,"Macro F1 >= 0.75, κ >= 0.70",PASS
+Verbatim Evidence Grounding,1.0,1.0,1.0,Exactness = 100%,PASS
+Critical Unsupported Inferences,1.0,1.0,1.0,Zero Errors (0),PASS

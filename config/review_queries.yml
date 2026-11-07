@@ -1,0 +1,339 @@
+# Growww AI-Powered Investor Discovery Engine
+# SIP Relevance & Discovery Query Dictionary
+# Schema Version: 1.0.0
+# Last Updated: 2026-11-06T22:00:00Z
+
+version: "1.0.0"
+description: "Deterministic keyword and phrase matching dictionary for SIP relevance identification across English, Hindi, and Hinglish."
+
+categories:
+  # =========================================================================
+  # A. SIP-First Start and Discovery
+  # =========================================================================
+  sip_first_start_and_discovery:
+    description: "Initial discovery, starting first SIP, motivations and beginner expectations."
+    direct_sip: true
+    patterns_en:
+      - "first sip"
+      - "first mutual fund"
+      - "started sip"
+      - "start sip"
+      - "starting sip"
+      - "new to investing"
+      - "beginner investor"
+      - "sip investment"
+      - "sip investing"
+      - "monthly investment"
+      - "start investing"
+      - "first investment"
+      - "new investor"
+    patterns_hi:
+      - "पहली एसआईपी"
+      - "एसआईपी शुरू"
+      - "निवेश शुरू"
+      - "पहली बार इन्वेस्ट"
+      - "म्यूचुअल फंड में नया"
+    patterns_hinglish:
+      - "pehli sip"
+      - "first time sip"
+      - "sip start ki"
+      - "sip kaise shuru karu"
+      - "sip shuru karni hai"
+      - "new investor hu"
+      - "monthly sip lagani hai"
+      - "nivesh shuru"
+      - "pehli baar invest"
+
+  # =========================================================================
+  # B. SIP Setup and Onboarding
+  # =========================================================================
+  sip_setup_and_onboarding:
+    description: "SIP creation, bank account linking, mandate creation, autopay registration."
+    direct_sip: true
+    patterns_en:
+      - "sip setup"
+      - "setup sip"
+      - "create sip"
+      - "creating sip"
+      - "sip registration"
+      - "bank linking"
+      - "link bank"
+      - "mandate registration"
+      - "autopay setup"
+      - "setup autopay"
+      - "first instalment"
+      - "first installment"
+      - "sip activation"
+      - "activate sip"
+      - "sip order"
+    patterns_hi:
+      - "एसआईपी सेटअप"
+      - "एसआईपी शुरू नहीं हो रही"
+      - "बैंक लिंक नहीं हो रहा"
+      - "मैंडेट नहीं बन रहा"
+      - "पहली किश्त"
+    patterns_hinglish:
+      - "sip create nahi ho rahi"
+      - "sip setup nahi ho raha"
+      - "mandate activate nahi ho raha"
+      - "bank account link nahi hua"
+      - "bank link nahi ho raha"
+      - "first sip payment nahi hua"
+      - "mandate nahi ban raha"
+      - "autopay approve nahi ho raha"
+
+  # =========================================================================
+  # C. Payment and Mandate Failures
+  # =========================================================================
+  payment_and_mandate_failures:
+    description: "SIP debit failures, mandate rejection, NACH/UPI autopay errors, missing reflection."
+    direct_sip: false  # Can be direct or indirect depending on explicit SIP mention
+    patterns_en:
+      - "sip payment failed"
+      - "sip payment fail"
+      - "mandate failed"
+      - "mandate rejected"
+      - "mandate failure"
+      - "auto debit failed"
+      - "autodebit failed"
+      - "instalment failed"
+      - "installment failed"
+      - "payment pending"
+      - "money deducted"
+      - "amount deducted"
+      - "nach failure"
+      - "nach reject"
+      - "upi autopay"
+      - "autopay failed"
+      - "autopay rejected"
+      - "debit failed"
+      - "payment not reflected"
+    patterns_hi:
+      - "पैसे कट गए"
+      - "पैसे नहीं कटे"
+      - "किश्त फेल हो गई"
+      - "ऑटो डेबिट नहीं हुआ"
+      - "मैंडेट फेल हो गया"
+      - "रुपये कट गए"
+    patterns_hinglish:
+      - "sip ka payment fail ho gaya"
+      - "sip payment fail ho gaya"
+      - "bank se amount deduct nahi hua"
+      - "paise kat gaye par sip update nahi hui"
+      - "paise kat gaye lekin sip nahi hui"
+      - "autopay kaam nahi kar raha"
+      - "mandate fail ho gaya"
+      - "amount kat gaya lekin"
+      - "paise cut gaye"
+      - "kisht fail ho gayi"
+
+  # =========================================================================
+  # D. Early SIP Experience & Status Tracking
+  # =========================================================================
+  early_sip_experience:
+    description: "Waiting for unit allotment, confirmation, transaction status, investment reflection."
+    direct_sip: true
+    patterns_en:
+      - "sip instalment"
+      - "sip installment"
+      - "sip status"
+      - "units allotted"
+      - "unit allotment"
+      - "transaction pending"
+      - "sip confirmation"
+      - "investment not reflected"
+      - "payment status"
+      - "sip transaction"
+      - "sip order placed"
+      - "instalment deducted"
+    patterns_hi:
+      - "एसआईपी का स्टेटस"
+      - "यूनिट्स नहीं मिले"
+      - "इन्वेस्टमेंट शो नहीं हो रहा"
+      - "पैसा जमा नहीं हुआ"
+    patterns_hinglish:
+      - "sip deduct hui par reflect nahi hui"
+      - "units kab milenge"
+      - "transaction pending dikha raha hai"
+      - "sip ka status"
+      - "units nahi mile"
+      - "investment show nahi ho raha"
+      - "paisa jama nahi hua"
+
+  # =========================================================================
+  # E. NAV, Returns and Expectation Confusion
+  # =========================================================================
+  nav_returns_and_expectation_confusion:
+    description: "Confusion regarding NAV calculation, negative SIP returns, XIRR, portfolio drops."
+    direct_sip: false
+    patterns_en:
+      - "sip loss"
+      - "negative sip returns"
+      - "nav confusion"
+      - "nav calculation"
+      - "nav date"
+      - "allotment nav"
+      - "units calculation"
+      - "expected returns"
+      - "portfolio value"
+      - "xirr"
+      - "sip return"
+      - "statement confusion"
+      - "mutual fund loss"
+      - "returns calculation"
+    patterns_hi:
+      - "एनएवी समझ नहीं आ रहा"
+      - "नुकसान हो रहा है"
+      - "रिटर्न कम है"
+      - "रिटर्न गलत है"
+    patterns_hinglish:
+      - "sip loss mein hai"
+      - "portfolio value kam kyu hai"
+      - "returns samajh nahi aa rahe"
+      - "units ka calculation galat hai"
+      - "nav samajh nahi aa raha"
+      - "nuksan ho raha hai"
+      - "loss mein hu kya karu"
+      - "return kam hai"
+
+  # =========================================================================
+  # F. SIP Pause, Stop and Restart
+  # =========================================================================
+  sip_pause_stop_and_restart:
+    description: "Pausing SIP, cancellation, skipping an instalment, modifying amount, restarting."
+    direct_sip: true
+    patterns_en:
+      - "stop sip"
+      - "pause sip"
+      - "cancel sip"
+      - "cancelling sip"
+      - "discontinue sip"
+      - "missed instalment"
+      - "missed installment"
+      - "restart sip"
+      - "resume sip"
+      - "reduce sip amount"
+      - "modify sip"
+      - "skip instalment"
+      - "skip installment"
+      - "sip cancel kaise kare"
+    patterns_hi:
+      - "एसआईपी बंद"
+      - "एसआईपी रोकना"
+      - "किश्त बंद करनी"
+      - "दोबारा एसआईपी शुरू"
+    patterns_hinglish:
+      - "sip pause kaise kare"
+      - "sip band kar di"
+      - "sip band karni hai"
+      - "instalment miss ho gayi"
+      - "sip restart karni hai"
+      - "sip rokna"
+      - "kisht band karni"
+      - "dobara sip shuru"
+
+  # =========================================================================
+  # G. Liquidity and Redemption
+  # =========================================================================
+  liquidity_and_redemption:
+    description: "Redeeming mutual fund units, emergency withdrawals, exit load, payout delays."
+    direct_sip: false
+    patterns_en:
+      - "withdraw investment"
+      - "redeem mutual fund"
+      - "redeem investment"
+      - "redemption pending"
+      - "emergency withdrawal"
+      - "exit load"
+      - "money withdrawal pending"
+      - "withdrawal pending"
+      - "liquidity problem"
+      - "payout pending"
+      - "sell mutual fund"
+    patterns_hi:
+      - "पैसे निकालने हैं"
+      - "पैसा वापस नहीं आया"
+      - "विड्रॉल पेंडिंग"
+      - "इमरजेंसी में पैसा चाहिए"
+    patterns_hinglish:
+      - "sip ka paisa nikalna hai"
+      - "redemption pending hai"
+      - "investment withdraw nahi ho raha"
+      - "paise nikalne hain"
+      - "paisa wapas nahi aaya"
+      - "emergency mein paisa chahiye"
+      - "withdrawal nahi aaya"
+
+  # =========================================================================
+  # H. Trust and Support
+  # =========================================================================
+  trust_and_support:
+    description: "Customer care complaints, unanswered tickets, trust deficit, fraud allegations."
+    direct_sip: false
+    patterns_en:
+      - "sip complaint"
+      - "mandate complaint"
+      - "transaction discrepancy"
+      - "customer support"
+      - "sip issue unresolved"
+      - "refund pending"
+      - "unresolved ticket"
+      - "support not responding"
+      - "worst customer support"
+      - "fraud app"
+      - "scam"
+      - "cheated"
+    patterns_hi:
+      - "शिकायत का जवाब नहीं"
+      - "कस्टमर केयर मदद नहीं कर रहा"
+      - "धोखा है"
+    patterns_hinglish:
+      - "support wale reply nahi kar rahe"
+      - "sip ka issue solve nahi hua"
+      - "complaint ka jawab nahi"
+      - "customer care help nahi kar raha"
+      - "fraud hai"
+      - "loot macha rakhi hai"
+
+# =========================================================================
+# General Investment & General App Terminology
+# =========================================================================
+general_investment_terms:
+  - "mutual fund"
+  - "mutual funds"
+  - "mf"
+  - "demat"
+  - "portfolio"
+  - "nav"
+  - "xirr"
+  - "cagr"
+  - "dividend"
+  - "elss"
+  - "debt fund"
+  - "index fund"
+  - "stock"
+  - "stocks"
+  - "share market"
+  - "ipo"
+  - "amc"
+  - "sebi"
+
+general_app_terms:
+  - "ui"
+  - "interface"
+  - "update"
+  - "login"
+  - "logout"
+  - "crash"
+  - "crashing"
+  - "slow"
+  - "bug"
+  - "glitch"
+  - "dark mode"
+  - "fingerprint"
+  - "face id"
+  - "battery"
+  - "notification"
+  - "ad"
+  - "ads"
+  - "rating"

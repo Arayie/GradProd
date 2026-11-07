@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "20261107_164727",
+  "backup_filename": "growww_backup_20261107_164727.db.gz",
+  "backup_path": "/Users/aradhyayadav/Downloads/GradProd/data/backups/growww_backup_20261107_164727.db.gz",
+  "file_size_bytes": 1483217,
+  "sha256_checksum": "65fec873f48e74b55165bdcbcb4ee6e574dca88f4c50a29fdb0c13c9893ec64c",
+  "engine": "SQLite 3.35+ (WAL)",
+  "source_db": "/Users/aradhyayadav/Downloads/GradProd/growww_discovery.db",
+  "metrics": {
+    "total_reviews": 3798,
+    "eligible_reviews": 3790,
+    "quarantined_records": 8,
+    "ai_evidence_records": 1532,
+    "opportunities": 7
+  },
+  "status": "VERIFIED_VALID"
+}

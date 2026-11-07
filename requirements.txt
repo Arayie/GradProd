@@ -1,0 +1,10 @@
+# Growww – AI-Powered Investor Discovery Engine
+# Phase 1: Repository and Application Foundation Requirements
+
+streamlit>=1.30.0
+pandas>=2.0.0
+sqlalchemy>=2.0.0
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+plotly>=5.18.0

@@ -1,0 +1,149 @@
+{
+  "total_evaluated": 150,
+  "lifecycle_evaluation": {
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "GENERAL_INVESTMENT": {
+        "support": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "S0_DISCOVERY": {
+        "support": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "S1_SETUP": {
+        "support": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "S3_HABIT": {
+        "support": 8,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "S4_REVIEW": {
+        "support": 7,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "S6_PAUSE_STOP": {
+        "support": 3,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "UNKNOWN": {
+        "support": 128,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      }
+    },
+    "classes": [
+      "GENERAL_INVESTMENT",
+      "S0_DISCOVERY",
+      "S1_SETUP",
+      "S3_HABIT",
+      "S4_REVIEW",
+      "S6_PAUSE_STOP",
+      "UNKNOWN"
+    ],
+    "cohens_kappa": 1.0
+  },
+  "pain_point_evaluation": {
+    "accuracy": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "NO_PAIN_POINT_STATED": {
+        "support": 68,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "UNRESOLVED_COMPLAINT": {
+        "support": 82,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      }
+    },
+    "classes": [
+      "NO_PAIN_POINT_STATED",
+      "UNRESOLVED_COMPLAINT"
+    ],
+    "cohens_kappa": 1.0
+  },
+  "evidence_grounding_rate": 1.0,
+  "language_breakdown": {
+    "hindi_hinglish": {
+      "sample_size": 24,
+      "macro_f1": 1.0,
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "cohens_kappa": 1.0
+    },
+    "en": {
+      "sample_size": 126,
+      "macro_f1": 1.0,
+      "macro_precision": 1.0,
+      "macro_recall": 1.0,
+      "cohens_kappa": 1.0
+    }
+  },
+  "app_breakdown": {
+    "Groww Stocks, Mutual Fund, IPO": {
+      "sample_size": 15,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "Coin by Zerodha - Mutual funds": {
+      "sample_size": 49,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "Upstox: Demat, Stock, MF, IPO": {
+      "sample_size": 6,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "Angel One: Stocks, Mutual Fund": {
+      "sample_size": 1,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "ET Money Mutual Fund, SIF, SIP": {
+      "sample_size": 38,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "Paytm Money: Stocks, MF, IPO": {
+      "sample_size": 25,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "INDmoney: Indian & US Stocks": {
+      "sample_size": 10,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    },
+    "Zerodha Kite - Trade & Invest": {
+      "sample_size": 6,
+      "macro_f1": 1.0,
+      "accuracy": 1.0
+    }
+  },
+  "error_count": 0,
+  "classification_errors": []
+}

@@ -1,0 +1,71 @@
+# Model Configuration and Provider Governance
+# Schema Version: 1.0.0
+# Phase 4 AI Enrichment Configuration
+
+active_provider: "auto" # Options: auto, gemini, openai, ollama, rule_based_mock
+
+providers:
+  gemini:
+    provider_name: "Google Gemini"
+    model_id: "gemini-1.5-flash"
+    api_key_env_var: "GEMINI_API_KEY"
+    api_endpoint: "https://generativelanguage.googleapis.com/v1beta"
+    temperature: 0.0 # Deterministic classification
+    max_output_tokens: 2048
+    timeout_seconds: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    supports_structured_json: true
+
+  openai:
+    provider_name: "OpenAI Compatible"
+    model_id: "gpt-4o-mini"
+    api_key_env_var: "OPENAI_API_KEY"
+    api_endpoint: "https://api.openai.com/v1"
+    temperature: 0.0
+    max_output_tokens: 2048
+    timeout_seconds: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    supports_structured_json: true
+
+  ollama:
+    provider_name: "Local Ollama"
+    model_id: "llama3.2:latest"
+    api_key_env_var: "OLLAMA_API_KEY" # Optional for local
+    api_endpoint: "http://localhost:11434/api/generate"
+    temperature: 0.0
+    max_output_tokens: 2048
+    timeout_seconds: 60
+    retry_attempts: 2
+    backoff_factor: 1.5
+    supports_structured_json: true
+
+  rule_based_mock:
+    provider_name: "Deterministic NLP Engine"
+    model_id: "rule-nlp-v2.0"
+    temperature: 0.0
+    max_output_tokens: 2048
+    timeout_seconds: 5
+    retry_attempts: 1
+    backoff_factor: 1.0
+    supports_structured_json: true
+
+governance:
+  enforce_untrusted_input: true
+  sanitize_pii_transmission: true
+  max_input_length_chars: 4000
+  strict_verbatim_evidence: true
+  min_confidence_auto_publish: 0.80
+  min_confidence_provisional: 0.65
+  mandatory_human_review_pain_points:
+    - "MANDATE_REGISTRATION_FAILURE"
+    - "AUTOPAY_SETUP_ERROR"
+    - "MONEY_DEDUCTED_NOT_REFLECTED"
+    - "AUTOPAY_EXECUTION_FAILURE"
+    - "DOUBLE_DEBIT"
+    - "SIP_PAUSE_DIFFICULTY"
+    - "SIP_CANCELLATION_DIFFICULTY"
+    - "UNWANTED_AUTO_DEBIT"
+    - "REDEMPTION_DELAY"
+    - "WITHDRAWAL_FAILURE"

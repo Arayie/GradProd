@@ -1,0 +1,30 @@
+theme_code,theme_name,category,unique_reviews_with_theme,human_validated_count,model_only_count,eligible_denominator,prevalence_pct,verification_status,confidence_mean,confidence_high_count,confidence_medium_count,confidence_low_count,groww_count,groww_prevalence_pct,groww_denominator,zerodha_coin_count,zerodha_coin_prevalence_pct,zerodha_kite_prevalence_pct,indmoney_prevalence_pct,paytm_money_prevalence_pct,et_money_prevalence_pct,angel_one_prevalence_pct,upstox_prevalence_pct,earliest_date,latest_date
+UNRESOLVED_COMPLAINTS,Unresolved Complaints,Support & Communication,449,82,367,3790,11.85,VALIDATED,0.788,218,658,0,23,5.69,404,104,20.8,6.57,5.66,19.92,15.0,10.92,8.24,2020-02-24,2026-11-05
+RETURN_DISPLAY_CONFUSION,Return Display Confusion,Tracking & NAV,26,0,26,3790,0.69,PRELIMINARY,0.909,26,0,0,2,0.5,404,2,0.4,1.03,0.42,1.01,0.6,1.26,0.22,2020-02-24,2026-11-05
+TRANSACTION_TRUST_ISSUES,Transaction Trust Issues,Support & Communication,18,4,14,3790,0.47,PRELIMINARY,0.821,17,19,0,0,0.0,404,4,0.8,0.21,0.21,0.8,0.2,1.26,0.22,2020-02-24,2026-11-05
+INFORMATION_TRANSPARENCY_ISSUES,Information Transparency Issues,Support & Communication,14,0,14,3790,0.37,PRELIMINARY,0.806,10,18,0,1,0.25,404,1,0.2,0.0,0.42,0.2,0.6,0.63,0.67,2020-02-24,2026-11-05
+KYC_FRICTION,KYC Friction,Setup & Mandate,10,0,10,3790,0.26,PRELIMINARY,0.861,14,6,0,0,0.0,404,0,0.0,0.0,0.42,1.01,0.6,0.0,0.0,2020-02-24,2026-11-05
+LIQUIDITY_CONFUSION,Liquidity Confusion,Redemption & Exit,7,2,5,3790,0.18,PRELIMINARY,0.86,10,4,0,0,0.0,404,2,0.4,0.21,0.21,0.2,0.2,0.21,0.0,2020-02-24,2026-11-05
+SIP_SETUP_COMPLEXITY,SIP Setup Complexity,Setup & Mandate,5,3,2,3790,0.13,PRELIMINARY,0.852,6,4,0,1,0.25,404,3,0.6,0.0,0.0,0.2,0.0,0.0,0.0,2020-02-24,2026-11-05
+PAYMENT_STATUS_CONFUSION,Payment Status Confusion,Payment & Execution,4,2,2,3790,0.11,PRELIMINARY,0.828,4,4,0,0,0.0,404,2,0.4,0.0,0.0,0.4,0.0,0.0,0.0,2020-02-24,2026-11-05
+TAXATION_CONFUSION,Taxation Confusion,Tracking & NAV,3,1,2,3790,0.08,PRELIMINARY,0.807,2,4,0,0,0.0,404,1,0.2,0.0,0.0,0.2,0.2,0.0,0.0,2020-02-24,2026-11-05
+SHORT_TERM_RETURN_GAP,Short-Term Return Expectation Gap,Tracking & NAV,2,0,2,3790,0.05,PRELIMINARY,0.835,2,2,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.42,0.0,2020-02-24,2026-11-05
+APP_NAVIGATION_FRICTION,App Navigation Friction,Support & Communication,2,1,1,3790,0.05,PRELIMINARY,0.735,0,4,0,0,0.0,404,0,0.0,0.0,0.21,0.0,0.2,0.0,0.0,2020-02-24,2026-11-05
+SIP_PAUSE_DIFFICULTY,SIP Pause Difficulty,Modification & Control,1,1,0,3790,0.03,PRELIMINARY,0.92,8,0,0,1,0.25,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+MANDATE_REGISTRATION_FAILURE,Mandate Registration Failure,Setup & Mandate,1,1,0,3790,0.03,PRELIMINARY,0.92,2,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.2,0.0,0.0,2020-02-24,2026-11-05
+CUSTOMER_SUPPORT_DELAY,Customer Support Delay,Support & Communication,1,0,1,3790,0.03,PRELIMINARY,0.88,2,0,0,0,0.0,404,0,0.0,0.0,0.21,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+SIP_CANCELLATION_DIFFICULTY,SIP Cancellation Difficulty,Modification & Control,1,1,0,3790,0.03,PRELIMINARY,0.92,2,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.22,2020-02-24,2026-11-05
+BANK_LINKING_FRICTION,Bank Linking Friction,Setup & Mandate,1,0,1,3790,0.03,PRELIMINARY,0.75,0,2,0,0,0.0,404,1,0.2,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+NAV_CONFUSION,NAV Confusion,Tracking & NAV,1,0,1,3790,0.03,PRELIMINARY,0.75,0,2,0,0,0.0,404,1,0.2,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+RISK_COMPREHENSION_GAP,Risk Comprehension Gap,Tracking & NAV,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+UNEXPECTED_DEBIT,Unexpected Debit,Payment & Execution,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+MISSED_INSTALMENT,Missed Instalment,Modification & Control,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+UNITS_NOT_ALLOTTED,Units Not Allotted,Tracking & NAV,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+SIP_RESTART_DIFFICULTY,SIP Restart Difficulty,Modification & Control,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+REDEMPTION_DELAY,Redemption Delay,Redemption & Exit,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+WITHDRAWAL_FRICTION,Withdrawal Friction,Redemption & Exit,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+PAYMENT_FAILURE,Payment Failure,Payment & Execution,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+DUPLICATE_DEBIT,Duplicate Debit,Payment & Execution,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+FIRST_PAYMENT_FAILURE,First Payment Failure,Payment & Execution,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+AUTOPAY_ACTIVATION_FAILURE,Autopay Activation Failure,Setup & Mandate,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05
+INVESTMENT_NOT_REFLECTED,Investment Not Reflected,Payment & Execution,0,0,0,3790,0.0,PRELIMINARY,0.0,0,0,0,0,0.0,404,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2020-02-24,2026-11-05

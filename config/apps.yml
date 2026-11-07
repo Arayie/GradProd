@@ -1,0 +1,195 @@
+# Groww AI-Powered Investor Discovery Engine
+# Candidate Application Registry
+# Schema Version: 1.0.0
+# Last Updated: 2026-11-05T13:40:00Z
+
+version: "1.0.0"
+description: "Verified registry of Indian investment applications for public customer review analysis."
+primary_case_study: "groww"
+
+applications:
+  - internal_id: "groww"
+    official_name: "Groww Stocks, Mutual Fund, IPO"
+    developer_name: "Billionbrains Garage Ventures Private Limited"
+    role: "primary_case_study"
+    apple_app_store:
+      app_id: "1404871703"
+      listing_url: "https://apps.apple.com/in/app/groww-stocks-mutual-fund-ipo/id1404871703"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.nextbillion.groww"
+      listing_url: "https://play.google.com/store/apps/details?id=com.nextbillion.groww"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Primary research case study. High review velocity: Apple RSS page cap of 10 pages (500 reviews)
+      spans approximately 60 days (Sept 2026 - Nov 2026). Supplemental collection routes needed for full 12-month cohort coverage.
+
+  - internal_id: "zerodha_coin"
+    official_name: "Coin by Zerodha - Mutual funds"
+    developer_name: "Zerodha Broking Limited"
+    role: "competitor_mutual_funds"
+    apple_app_store:
+      app_id: "1392892554"
+      listing_url: "https://apps.apple.com/in/app/coin-by-zerodha-mutual-funds/id1392892554"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.zerodha.coin"
+      listing_url: "https://play.google.com/store/apps/details?id=com.zerodha.coin"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Dedicated direct mutual fund and NPS platform by Zerodha. Note: App ID 1392892554 is the live active App Store listing;
+      older web mentions cited ID 1375141655 which returned 0 reviews. Low review velocity: 500 reviews span from Feb 2020 to Nov 2026.
+
+  - internal_id: "zerodha_kite"
+    official_name: "Zerodha Kite - Trade & Invest"
+    developer_name: "Zerodha Broking Limited"
+    role: "competitor_ecosystem"
+    apple_app_store:
+      app_id: "1449453802"
+      listing_url: "https://apps.apple.com/in/app/zerodha-kite-trade-invest/id1449453802"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.zerodha.kite3"
+      listing_url: "https://play.google.com/store/apps/details?id=com.zerodha.kite3"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Zerodha flagship trading and demat application. Companion ecosystem app to Coin.
+      Apple RSS feed yields 500 reviews spanning July 2025 to Nov 2026.
+
+  - internal_id: "upstox"
+    official_name: "Upstox: Demat, Stock, MF, IPO"
+    developer_name: "RKSV Securities India Private Limited"
+    role: "competitor_discount_broker"
+    apple_app_store:
+      app_id: "1584953620"
+      listing_url: "https://apps.apple.com/in/app/upstox-demat-stock-mf-ipo/id1584953620"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "in.upstox.app"
+      listing_url: "https://play.google.com/store/apps/details?id=in.upstox.app"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Key discount broker competitor offering both mutual funds and equity trading.
+      Apple RSS feed yields 500 reviews spanning Nov 2025 to Nov 2026 (~12 months).
+
+  - internal_id: "angel_one"
+    official_name: "Angel One: Stocks, Mutual Fund"
+    developer_name: "Angel One Limited"
+    role: "competitor_full_service_broker"
+    apple_app_store:
+      app_id: "1060530981"
+      listing_url: "https://apps.apple.com/in/app/angel-one-stocks-mutual-fund/id1060530981"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.msf.angelmobile"
+      listing_url: "https://play.google.com/store/apps/details?id=com.msf.angelmobile"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Major hybrid broker with strong tier-2/3 retail reach.
+      Apple RSS feed yields 500 reviews spanning Dec 2025 to Nov 2026 (~11 months).
+      Google Play package is com.msf.angelmobile (legacy Angel Mobile package maintained for Spark).
+
+  - internal_id: "indmoney"
+    official_name: "INDmoney: Indian & US Stocks"
+    developer_name: "Finzoom Investment Advisors Private Limited"
+    role: "competitor_wealth_tracker"
+    apple_app_store:
+      app_id: "1450178837"
+      listing_url: "https://apps.apple.com/in/app/indmoney-indian-us-stocks/id1450178837"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "in.indwealth"
+      listing_url: "https://play.google.com/store/apps/details?id=in.indwealth"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Wealth management, direct mutual fund, and investment tracking competitor.
+      Apple RSS feed yields 500 reviews spanning Nov 2025 to Nov 2026 (~12 months).
+
+  - internal_id: "et_money"
+    official_name: "ET Money Mutual Fund, SIF, SIP"
+    developer_name: "Banayantree Services Limited"
+    role: "competitor_mutual_funds"
+    apple_app_store:
+      app_id: "1212752482"
+      listing_url: "https://apps.apple.com/in/app/et-money-mutual-fund-sif-sip/id1212752482"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.smartspends"
+      listing_url: "https://play.google.com/store/apps/details?id=com.smartspends"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Pioneer direct mutual fund investment and SIP management application (Times Internet affiliate).
+      Apple App ID is 1212752482 (Bundle: com.smartspends). Google Play package is com.smartspends.
+      Apple RSS feed yields 500 reviews spanning Jan 2025 to Oct 2026 (~21 months).
+
+  - internal_id: "paytm_money"
+    official_name: "Paytm Money: Stocks, MF, IPO"
+    developer_name: "Paytm Money Limited"
+    role: "competitor_discount_broker"
+    apple_app_store:
+      app_id: "1344431352"
+      listing_url: "https://apps.apple.com/in/app/paytm-money-stocks-mf-ipo/id1344431352"
+      india_storefront_available: true
+      rss_feed_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Apple iTunes Search API & Public RSS Endpoint"
+    google_play_store:
+      package_name: "com.paytmmoney"
+      listing_url: "https://play.google.com/store/apps/details?id=com.paytmmoney"
+      india_storefront_available: true
+      verification_status: "VERIFIED"
+      verification_date: "2026-11-05"
+      verification_source: "Google Play Store India Storefront Listing"
+    notes: >
+      Direct mutual fund and equity investment platform within Paytm parent ecosystem.
+      Apple RSS feed yields 500 reviews spanning Feb 2025 to Nov 2026 (~21 months).

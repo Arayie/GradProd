@@ -1,0 +1,9 @@
+review_id,app_name,platform,star_rating,review_date,app_version,review_title,review_text
+gp_groww_001,Groww,Google Play,5,2026-10-15T08:30:00Z,18.20.1,Very easy for first time SIP,Started my first 1000 rupees monthly SIP in Nifty 50 index fund. The UPI autopay setup took less than 2 minutes.
+gp_groww_002,Groww,Google Play,1,2026-10-18T14:12:00Z,18.21.0,Mandate debited but failed in app,My bank debited 2000 rupees for my SIP yesterday but app still shows order pending and support is not replying!
+gp_groww_003,Groww,Google Play,2,2026-09-25T11:05:00Z,18.19.2,Minus return in 3 months,3 mahine se SIP chal rahi hai par portfolio minus me dikha raha hai. Bank FD hi acchi thi yahan loss ho raha hai.
+gp_groww_004,Groww,Google Play,4,2026-08-10T16:45:00Z,18.17.0,Bachon ki padhai ke liye shuru kiya,Bacho ki higher education ke liye 15 saal ka plan banaya hai. App UI simple hai aur track karna asan hai.
+gp_coin_001,Zerodha Coin,Google Play,5,2026-10-02T09:20:00Z,4.2.1,Best direct mutual fund platform,No commission direct funds. NPS and mutual fund SIP management is seamless without any distributor cut.
+gp_coin_002,Zerodha Coin,Google Play,2,2026-09-12T13:40:00Z,4.1.8,Mandate rejected by bank,e-mandate got rejected due to signature mismatch. Wish there was clearer error message instead of generic failure.
+gp_upstox_001,Upstox,Google Play,4,2026-10-20T10:15:00Z,6.1.4,Good for stocks and MF combined,Setup my monthly SIP easily. Demat holding statement reflects correctly within T+2 days.
+gp_angel_001,Angel One,Google Play,1,2026-10-05T07:55:00Z,5.18.0,Bank bounce penalty charged,App did not trigger reminder before SIP date and bank deducted 590 rupees bounce charges for insufficient balance.

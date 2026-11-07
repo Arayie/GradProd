@@ -1,0 +1,743 @@
+# Groww AI-Powered Investor Discovery Engine
+# Initial Review Classification Taxonomy
+# Schema Version: 1.0.0
+# Last Updated: 2026-11-05T13:45:00Z
+#
+# GOVERNANCE & CLASSIFICATION PRINCIPLES:
+# 1. Multilingual Support: Covers English, Hindi (Devanagari script), and Hinglish (transliterated Hindi in Latin script).
+# 2. Initial Framework: Keywords provide indicative lexicon for NLP heuristics; final classification uses LLM reasoning.
+# 3. Demographics Privacy: Segment attributes MUST default to UNKNOWN. Never infer age, income, or financial status
+#    from usernames, slang, regional dialect, or grammar.
+# 4. Evidence Grounding: Classification must be backed by explicit user text.
+
+version: "1.0.0"
+description: "Comprehensive multilingual taxonomy for classifying mutual fund SIP public reviews."
+
+dimensions:
+  # =========================================================================
+  # DIMENSION A: INVESTOR INTENT
+  # =========================================================================
+  investor_intent:
+    name: "Investor Intent"
+    description: "The core motivation or underlying objective driving the investor to begin investing in mutual funds or SIPs."
+    unknown_handling: "Assign UNKNOWN if no explicit motivation is discernible in the review text."
+    allowed_labels:
+      - START_DISCIPLINED_SAVING
+      - BUILD_LONG_TERM_GOAL
+      - LEARN_INVESTING
+      - TAX_PLANNING
+      - CONVENIENCE
+      - FAMILY_PEER_INFLUENCE
+      - CREATOR_ADVISER_INFLUENCE
+      - LIQUIDITY_NEED
+      - UNKNOWN
+
+    categories:
+      - code: START_DISCIPLINED_SAVING
+        description: "Desire to cultivate financial discipline and save regular amounts every month."
+        examples:
+          - "Started a monthly 1000 rs SIP to force myself to save."
+          - "हर महीने बचत की आदत डालने के लिए एसआईपी शुरू किया।"
+          - "Pehli baar monthly saving shuru ki hai disciplne ke liye."
+        english_keywords: ["disciplined saving", "monthly saving", "force saving", "save regularly", "savings habit", "small savings"]
+        hindi_keywords: ["नियमित बचत", "बचत की आदत", "हर महीने बचत", "अनुशासन"]
+        hinglish_keywords: ["monthly bachat", "bachat ki aadat", "har mahine bachat", "paisa bachana", "saving start kiya"]
+        exclusion_rules: ["Exclude if user explicitly talks about short-term stock trading or lottery-like returns."]
+
+      - code: BUILD_LONG_TERM_GOAL
+        description: "Investing targeted toward a distant milestone (retirement, house purchase, child education, wealth creation)."
+        examples:
+          - "Investing for my child's future education over the next 15 years."
+          - "रिटायरमेंट और बच्चों की पढ़ाई के लिए फंड बना रहा हूँ।"
+          - "10 saal baad ghar lene ke liye SIP start ki hai."
+        english_keywords: ["long term", "retirement", "child education", "future goal", "wealth creation", "10 years", "compounding"]
+        hindi_keywords: ["दीर्घकालिक", "रिटायरमेंट", "भविष्य का लक्ष्य", "बच्चों की पढ़ाई", "लंबी अवधि"]
+        hinglish_keywords: ["lamba samay", "future ke liye", "wealth banana", "10 saal", "lambe samay ka investment"]
+        exclusion_rules: ["Exclude if user mentions withdrawing money within 3-6 months."]
+
+      - code: LEARN_INVESTING
+        description: "Curiosity and desire to understand how financial markets, NAVs, and mutual funds operate."
+        examples:
+          - "Started 500 SIP as a beginner just to learn mutual funds."
+          - "सीखने के लिए पहली बार म्यूचुअल फंड में 500 रुपये लगाए।"
+          - "Beginner hu, market sikhne ke liye SIP try kar raha hu."
+        english_keywords: ["beginner", "learn", "learning", "starter", "first time", "trial", "testing waters", "explore"]
+        hindi_keywords: ["सीखना", "नया निवेशक", "पहली बार", "शुरुआती"]
+        hinglish_keywords: ["sikhne ke liye", "beginner hu", "pehli baar", "try kar raha hu", "samajhne ke liye"]
+        exclusion_rules: ["Exclude if user demonstrates advanced algorithmic trading knowledge."]
+
+      - code: TAX_PLANNING
+        description: "Investing specifically in ELSS funds for tax exemptions under Section 80C."
+        examples:
+          - "Started ELSS SIP for 80C tax deduction before March."
+          - "टैक्स बचाने के लिए ईएलएसएस फंड में एसआईपी की।"
+          - "Tax saving ELSS fund ke liye invest kiya."
+        english_keywords: ["tax saving", "elss", "80c", "tax benefit", "save tax", "financial year end"]
+        hindi_keywords: ["टैक्स बचत", "कर छूट", "ईएलएसएस", "80C"]
+        hinglish_keywords: ["tax bachana", "tax bachat", "80c deduction", "tax exemption"]
+        exclusion_rules: ["Exclude regular non-ELSS equity/debt fund investments."]
+
+      - code: CONVENIENCE
+        description: "Attracted by easy digital KYC, zero paperwork, UPI autopay, or seamless mobile user experience."
+        examples:
+          - "Very easy paperless onboarding and quick UPI setup."
+          - "बिना किसी कागजी कार्रवाई के 5 मिनट में सब शुरू हो गया।"
+          - "Bina kisi paper work ke instant account open ho gaya."
+        english_keywords: ["convenient", "paperless", "easy setup", "simple", "upi autopay", "1 click", "smooth"]
+        hindi_keywords: ["आसान", "कागज रहित", "सुविधाजनक", "तुरंत"]
+        hinglish_keywords: ["aasan", "simple laga", "ghar baithe", "bina paper work", "jhanjhat free"]
+        exclusion_rules: ["Exclude if convenience was overshadowed by immediate setup failure."]
+
+      - code: FAMILY_PEER_INFLUENCE
+        description: "Starting based on explicit encouragement or social proof from friends, colleagues, or relatives."
+        examples:
+          - "My office colleague recommended Groww for mutual funds."
+          - "दोस्त के कहने पर एसआईपी चालू की।"
+          - "Bhai ne bola mutual fund accha hai isliye start kiya."
+        english_keywords: ["friend recommended", "colleague", "relative", "brother told", "peer advice", "word of mouth"]
+        hindi_keywords: ["दोस्त की सलाह", "रिश्तेदार", "सहकर्मी"]
+        hinglish_keywords: ["dost ne bola", "friend ne recommend kiya", "bhai ke kehne par", "office walo ne bataya"]
+        exclusion_rules: ["Exclude generic social media ads; requires personal relation."]
+
+      - code: CREATOR_ADVISER_INFLUENCE
+        description: "Influence from financial influencers (finfluencers), YouTube videos, podcasts, or certified advisers."
+        examples:
+          - "Watched a YouTube video on index fund compounding and started an SIP."
+          - "यूट्यूब वीडियो देखकर एसआईपी में निवेश शुरू किया।"
+          - "YouTuber ki video dekh ke 1000 ka SIP lagaya."
+        english_keywords: ["youtube", "finfluencer", "video", "influencer", "advisor", "podcast", "instagram reel"]
+        hindi_keywords: ["यूट्यूब", "वीडियो देखकर", "सलाहकार"]
+        hinglish_keywords: ["youtube dekh ke", "influencer ne bataya", "video dekh kar", "reel dekh kar"]
+        exclusion_rules: ["Exclude traditional newspaper articles."]
+
+      - code: LIQUIDITY_NEED
+        description: "Focus on liquid funds or emergency parking with quick redemption possibilities."
+        examples:
+          - "Put money in liquid fund to earn more than savings account."
+          - "इमरजेंसी फंड के लिए लिक्विड फंड में निवेश किया।"
+          - "Emergency ke time jaldi paisa nikalne ke liye lagaya."
+        english_keywords: ["liquid fund", "emergency fund", "park cash", "better than bank fd", "instant withdrawal"]
+        hindi_keywords: ["लिक्विड फंड", "आपातकालीन फंड", "त्वरित निकासी"]
+        hinglish_keywords: ["emergency paisa", "instant withdraw", "savings account se behtar"]
+        exclusion_rules: ["Exclude long-term lock-in funds."]
+
+      - code: UNKNOWN
+        description: "Motivation cannot be ascertained from the review text."
+        english_keywords: []
+        hindi_keywords: []
+        hinglish_keywords: []
+
+  # =========================================================================
+  # DIMENSION B: EXPECTED OUTCOME
+  # =========================================================================
+  expected_outcome:
+    name: "Expected Outcome"
+    description: "The tangible outcome or benefit the investor anticipated receiving from the app or investment."
+    unknown_handling: "Default to UNKNOWN if user only complains or discusses unrelated bugs."
+    allowed_labels:
+      - CAPITAL_GROWTH
+      - PREDICTABLE_OUTCOME
+      - SAFETY_CAPITAL_PROTECTION
+      - EASY_INVESTMENT
+      - ACCESS_TO_MONEY
+      - TAX_BENEFIT
+      - HABIT_FORMATION
+      - UNKNOWN
+
+    categories:
+      - code: CAPITAL_GROWTH
+        description: "Expectation of significant high returns beating inflation and bank fixed deposits."
+        examples:
+          - "Expected 15% annual returns to beat inflation."
+          - "एफडी से ज्यादा रिटर्न की उम्मीद थी।"
+          - "Accha profit aur return milega socha tha."
+        english_keywords: ["high returns", "beat inflation", "compound interest", "growth", "profit", "wealth"]
+        hindi_keywords: ["अधिक रिटर्न", "मुनाफा", "ब्याज", "पूंजी वृद्धि"]
+        hinglish_keywords: ["zyada return", "accha munafa", "growth milegi", "paisa double"]
+        exclusion_rules: ["Exclude if user specifically requests zero risk."]
+
+      - code: PREDICTABLE_OUTCOME
+        description: "Expectation that mutual funds behave like recurring deposits with guaranteed linear gains."
+        examples:
+          - "I thought monthly SIP gives fixed guaranteed profit every month."
+          - "सोचा था हर महीने निश्चित ब्याज मिलेगा लेकिन यह तो घट रहा है।"
+          - "Mujhe laga tha fixed return aayega jaise RD me hota hai."
+        english_keywords: ["fixed return", "guaranteed", "predictable", "like rd", "stable return", "sure return"]
+        hindi_keywords: ["निश्चित रिटर्न", "गारंटीड", "स्थिर आय"]
+        hinglish_keywords: ["fixed return", "guarantee", "rd jaisa", "har mahine fix profit"]
+        exclusion_rules: ["Exclude if user acknowledges market volatility."]
+
+      - code: SAFETY_CAPITAL_PROTECTION
+        description: "Expectation that initial invested principal will never dip into negative territory."
+        examples:
+          - "Why is my invested capital showing in red? My money should be safe."
+          - "मेरा मूलधन कम नहीं होना चाहिए।"
+          - "Mera lagaya hua paisa safe rehna chahiye, minus kyu ja raha hai."
+        english_keywords: ["safe", "security", "capital protection", "no loss", "zero risk", "protect money"]
+        hindi_keywords: ["सुरक्षित", "नुकसान नहीं", "पूंजी सुरक्षा"]
+        hinglish_keywords: ["safe investment", "loss nahi hona chahiye", "paisa doobna nahi chahiye"]
+        exclusion_rules: ["Exclude aggressive small cap equity reviews."]
+
+      - code: EASY_INVESTMENT
+        description: "Expectation of effortless automation where user doesn't need to manually pay every month."
+        examples:
+          - "Expected automated debit without needing manual OTP every time."
+          - "सोचा था अपने आप बैंक से कट जाएगा बिना किसी झंझट के।"
+          - "Auto debit smoothly hona chahiye bina manual step ke."
+        english_keywords: ["autopay", "automatic debit", "hassle free", "seamless", "no manual work"]
+        hindi_keywords: ["ऑटोपे", "स्वतः कटौती", "झंझट मुक्त"]
+        hinglish_keywords: ["apne aap katna", "auto debit", "bina jhanjhat", "automatic ho jaye"]
+        exclusion_rules: ["Exclude manual net banking transactions."]
+
+      - code: ACCESS_TO_MONEY
+        description: "Expectation of swift, same-day access to funds upon redemption."
+        examples:
+          - "Expected instant withdrawal to my bank account."
+          - "पैसे तुरंत बैंक में आने की उम्मीद थी।"
+          - "Paisa withdraw karne par turant aana chahiye."
+        english_keywords: ["instant withdrawal", "fast payout", "quick redemption", "immediate credit"]
+        hindi_keywords: ["त्वरित निकासी", "तुरंत खाते में", "पैसे वापस"]
+        hinglish_keywords: ["turant credit", "jaldi withdraw", "same day paisa"]
+        exclusion_rules: ["Exclude standard equity T+2 settlement expectations."]
+
+      - code: TAX_BENEFIT
+        description: "Anticipation of 80C receipt generation and tax reduction."
+        examples:
+          - "Needed tax statement for IT filing."
+          - "टैक्स छूट का प्रमाणपत्र चाहिए था।"
+          - "ITR me tax bachane ke liye receipt chahiye."
+        english_keywords: ["tax exemption", "80c statement", "tax proof", "itr receipt"]
+        hindi_keywords: ["कर लाभ", "प्रमाणपत्र", "टैक्स छूट"]
+        hinglish_keywords: ["tax proof", "statement milna chahiye", "80c certificate"]
+        exclusion_rules: []
+
+      - code: HABIT_FORMATION
+        description: "Expectation that the app helps build a lifelong financial saving habit."
+        examples:
+          - "Wanted an app that reminds and encourages me to save."
+          - "बचत करने की अच्छी आदत बन जाए।"
+          - "Saving karne ki habit ban jaye bas."
+        english_keywords: ["habit", "routine", "financial discipline", "nudge", "reminder"]
+        hindi_keywords: ["आदत", "नियम", "अनुशासन"]
+        hinglish_keywords: ["habit banegi", "aadat lag jaye", "regular saving"]
+        exclusion_rules: []
+
+      - code: UNKNOWN
+        description: "Outcome expectation unstated."
+        english_keywords: []
+        hindi_keywords: []
+        hinglish_keywords: []
+
+  # =========================================================================
+  # DIMENSION C: SIP LIFECYCLE STAGES
+  # =========================================================================
+  sip_lifecycle_stages:
+    name: "SIP Lifecycle Stages"
+    description: "The precise chronological stage in the investor's SIP journey reflected in the review."
+    unknown_handling: "Map to closest stage based on verb tense and friction described."
+    allowed_labels:
+      - S0_DISCOVERY
+      - S1_SETUP
+      - S2_EARLY
+      - S3_HABIT
+      - S4_REVIEW
+      - S5_FRICTION
+      - S6_PAUSE_STOP
+      - S7_RESTART
+
+    categories:
+      - code: S0_DISCOVERY
+        description: "Exploring funds, comparing past performance, browsing app features prior to placing first order."
+        examples:
+          - "Exploring mutual funds on the app, UI looks intuitive."
+          - "ऐप डाउनलोड किया है और फंड्स चेक कर रहा हूँ।"
+          - "App me mutual funds search kar raha tha, funds comparison accha hai."
+        english_keywords: ["exploring", "looking at funds", "comparing", "researching", "just downloaded", "browsing"]
+        hindi_keywords: ["तलाश", "फंड्स देखना", "डाउनलोड किया", "तुलना"]
+        hinglish_keywords: ["dekh raha hu", "download kiya", "compare kar raha hu", "search kar raha tha"]
+        exclusion_rules: ["Exclude if user has already invested or set up mandate."]
+
+      - code: S1_SETUP
+        description: "Initial onboarding, KYC verification, bank account linking, and setting up e-mandate/autopay."
+        examples:
+          - "KYC verification is taking 4 days and mandate setup failed."
+          - "केवाईसी सत्यापन में बहुत समय लग रहा है और ऑटोपे रिजेक्ट हो गया।"
+          - "Pehla SIP mandate setup nahi ho raha, bank verify pending."
+        english_keywords: ["kyc", "mandate setup", "bank verification", "nach", "first installment", "onboarding", "autopay setup"]
+        hindi_keywords: ["केवाईसी", "बैंक सत्यापन", "ऑटोपे सेटअप", "पहला खाता", "पंजीकरण"]
+        hinglish_keywords: ["kyc pending", "mandate fail", "bank verify nahi hua", "pehli sip setup", "autopay registration"]
+        exclusion_rules: ["Exclude if user mentions having already paid multiple subsequent installments."]
+
+      - code: S2_EARLY
+        description: "Months 1 to 3 of SIP. First few debits, allotment of NAV units, initial portfolio viewing."
+        examples:
+          - "2nd SIP deducted yesterday but units not allocated yet."
+          - "दूसरी किस्त कट गई लेकिन पोर्टफोलियो में अभी तक नहीं दिख रही।"
+          - "Dusra mahina hai SIP ka, NAV kab credit hoga?"
+        english_keywords: ["first debit", "second installment", "units not allotted", "1st month", "2nd month", "initial debit"]
+        hindi_keywords: ["पहली किस्त", "दूसरी किस्त", "यूनिट्स आवंटन", "शुरुआती महीने"]
+        hinglish_keywords: ["pehla mahina", "dusri installment", "unit allot nahi hui", "2 mahine hue"]
+        exclusion_rules: ["Exclude if user has been investing for more than 6 months."]
+
+      - code: S3_HABIT
+        description: "Months 4 to 12. Routine, repeated, disciplined monthly debits running smoothly without active intervention."
+        examples:
+          - "Running 3 SIPs for the last 8 months seamlessly."
+          - "पिछले 6 महीने से लगातार एसआईपी सही चल रही है।"
+          - "6-7 mahine se automatic cut ho raha hai bina kisi issue ke."
+        english_keywords: ["running smoothly", "last 6 months", "monthly habit", "seamless deduction", "regular investor"]
+        hindi_keywords: ["नियमित रूप से", "६ महीने से", "लगातार चल रहा है", "कोई परेशानी नहीं"]
+        hinglish_keywords: ["6 mahine ho gaye", "regular kat raha hai", "mast chal raha hai", "routine ban gaya"]
+        exclusion_rules: ["Exclude if major blocking friction or stop event occurred."]
+
+      - code: S4_REVIEW
+        description: "Periodic portfolio health check, reviewing XIRR/CAGR, comparing scheme returns against benchmark."
+        examples:
+          - "Reviewing my 1 year portfolio returns, small cap gave 25% XIRR."
+          - "एक साल बाद पोर्टफोलियो का रिटर्न चेक किया, एक्सआईआरआर कम है।"
+          - "1 saal ka return dekha, XIRR negative kyu dikha raha hai?"
+        english_keywords: ["review returns", "xirr", "cagr", "annual review", "portfolio check", "benchmark"]
+        hindi_keywords: ["रिटर्न की समीक्षा", "पोर्टफोलियो जांच", "वार्षिक समीक्षा"]
+        hinglish_keywords: ["xirr check kiya", "return dekha", "1 saal ka profit", "portfolio check"]
+        exclusion_rules: ["Exclude mere balance queries during early days."]
+
+      - code: S5_FRICTION
+        description: "Experiencing operational failures, delayed NAV, bank mandate bounces, or unresponsive customer support."
+        examples:
+          - "SIP amount debited from bank but shows failed in app! Support not responding."
+          - "बैंक से पैसे कट गए लेकिन ऐप में पेंडिंग दिखा रहा है, कोई जवाब नहीं।"
+          - "Paisa kat gaya par app me failed aa raha hai, ticket open ki koi reply nahi."
+        english_keywords: ["payment failed", "debited not credited", "support delay", "bug", "crash", "stuck", "mandate bounce"]
+        hindi_keywords: ["भुगतान विफल", "पैसे कट गए", "सपोर्ट जवाब नहीं दे रहा", "त्रुटि", "परेशानी"]
+        hinglish_keywords: ["paisa kat gaya", "failed dikha raha", "support bakwas hai", "koi help nahi", "ticket pending"]
+        exclusion_rules: ["Exclude smooth operational experiences."]
+
+      - code: S6_PAUSE_STOP
+        description: "Active decision to pause installments, cancel autopay mandate, or stop SIP due to financial or app frustration."
+        examples:
+          - "Fed up with technical glitches, cancelled my SIP and stopped auto debit."
+          - "परेशान होकर मैंने एसआईपी बंद कर दी और ऑटोपे डिलीट कर दिया।"
+          - "SIP pause kar di hai paise ki tangi ki wajah se."
+        english_keywords: ["cancelled sip", "stopped sip", "pause", "cancelled mandate", "deleted autopay", "closed sip"]
+        hindi_keywords: ["एसआईपी बंद की", "ऑटोपे रद्द", "रोक दिया", "बंद कर दिया"]
+        hinglish_keywords: ["sip band kar di", "pause kiya", "autopay cancel kar diya", "stop kar diya"]
+        exclusion_rules: ["Exclude unintentional missed installments due to bank server down."]
+
+      - code: S7_RESTART
+        description: "Resuming a previously paused SIP, modifying installment amount upward, or creating a new SIP after gap."
+        examples:
+          - "Restarted my halted SIP after income stabilized."
+          - "दोबारा एसआईपी शुरू की जब सैलरी बढ़ी।"
+          - "Ruki hui SIP phir se resume ki hai."
+        english_keywords: ["restarted sip", "resumed", "started again", "re-activate", "increased sip amount"]
+        hindi_keywords: ["फिर से शुरू", "दोबारा चालू", "पुनः आरंभ"]
+        hinglish_keywords: ["phir se start kiya", "resume kar diya", "dobara shuru ki"]
+        exclusion_rules: ["Exclude initial first-time setups."]
+
+  # =========================================================================
+  # DIMENSION D: INVESTOR BEHAVIOUR
+  # =========================================================================
+  investor_behaviour:
+    name: "Investor Behaviour"
+    description: "Concrete actions performed by the investor inside or outside the investment app."
+    unknown_handling: "Select the most prominent demonstrated behavior; default to NOT_STATED/UNKNOWN if passive."
+    allowed_labels:
+      - CHECK_NAV_VALUE
+      - CHECK_RETURNS
+      - CHECK_TRANSACTION_STATUS
+      - CHECK_STATEMENT
+      - CHANGE_SIP_AMOUNT
+      - MISS_INSTALMENT
+      - PAUSE_SIP
+      - REDEEM
+      - CONTACT_SUPPORT
+      - SEEK_EXTERNAL_EXPLANATION
+
+    categories:
+      - code: CHECK_NAV_VALUE
+        description: "Checking daily NAV price or unit allocation."
+        english_keywords: ["nav", "nav date", "allotment price", "nav update"]
+        hindi_keywords: ["एनएवी", "यूनिट्स का भाव"]
+        hinglish_keywords: ["nav check karna", "aaj ka nav"]
+
+      - code: CHECK_RETURNS
+        description: "Viewing total profit/loss, XIRR, or percentage gains in portfolio."
+        english_keywords: ["checking returns", "xirr", "profit loss", "p&l", "my portfolio"]
+        hindi_keywords: ["रिटर्न देखना", "मुनाफा देखना", "घाटा"]
+        hinglish_keywords: ["return check kiya", "kitna profit hua", "loss dekh raha hu"]
+
+      - code: CHECK_TRANSACTION_STATUS
+        description: "Repeatedly checking if payment succeeded, failed, or is in transit."
+        english_keywords: ["transaction status", "order pending", "order history", "track payment"]
+        hindi_keywords: ["लेनदेन की स्थिति", "ऑर्डर स्टेटस"]
+        hinglish_keywords: ["payment status", "pending dikha raha hai", "order track"]
+
+      - code: CHECK_STATEMENT
+        description: "Downloading capital gains reports, account statements, or tax proof."
+        english_keywords: ["statement", "cas statement", "tax report", "download receipt"]
+        hindi_keywords: ["खाता विवरण", "स्टेटमेंट डाउनलोड"]
+        hinglish_keywords: ["statement download", "receipt mangi"]
+
+      - code: CHANGE_SIP_AMOUNT
+        description: "Attempting to step-up, increase, or decrease monthly commitment."
+        english_keywords: ["step up", "increase sip", "decrease amount", "modify sip"]
+        hindi_keywords: ["राशि बदलना", "किस्त बढ़ाना"]
+        hinglish_keywords: ["sip amount change karna", "step up sip", "rakam badhana"]
+
+      - code: MISS_INSTALMENT
+        description: "Missing a deduction due to insufficient bank funds or mandate failure."
+        english_keywords: ["missed sip", "insufficient balance", "bounce charge", "skipped"]
+        hindi_keywords: ["किस्त छूट गई", "असंतोषजनक शेष"]
+        hinglish_keywords: ["sip miss ho gayi", "balance nahi tha", "bounce lag gaya"]
+
+      - code: PAUSE_SIP
+        description: "Temporarily halting future installments via the app toggle."
+        english_keywords: ["paused sip", "pause option", "temporarily stop"]
+        hindi_keywords: ["अस्थायी रोक", "पॉज किया"]
+        hinglish_keywords: ["sip pause kar di", "kuch mahine ke liye rok di"]
+
+      - code: REDEEM
+        description: "Withdrawing partial or complete mutual fund units to bank."
+        english_keywords: ["redeem", "withdrawal", "sold units", "cash out"]
+        hindi_keywords: ["पैसे निकालना", "निकासी", "यूनिट्स बेची"]
+        hinglish_keywords: ["withdraw kiya", "redeem lagaya", "paisa nikala"]
+
+      - code: CONTACT_SUPPORT
+        description: "Raising helpdesk tickets, in-app chat, or email to customer care."
+        english_keywords: ["support ticket", "customer care", "helpdesk", "emailed support", "call center"]
+        hindi_keywords: ["ग्राहक सेवा", "सपोर्ट टिकट", "मदद मांगी"]
+        hinglish_keywords: ["customer care ko call kiya", "ticket open ki", "support se baat ki"]
+
+      - code: SEEK_EXTERNAL_EXPLANATION
+        description: "Looking outside the app to forums, Google, or advisers to understand app behavior."
+        english_keywords: ["asked on reddit", "searched google", "asked friend", "youtube search"]
+        hindi_keywords: ["बाहर पूछताछ की", "गूगल पर देखा"]
+        hinglish_keywords: ["google par search kiya", "dost se pucha", "youtube par dekha"]
+
+  # =========================================================================
+  # DIMENSION E: PAIN POINTS
+  # =========================================================================
+  pain_points:
+    name: "Pain Points & Operational Friction"
+    description: "The primary source of failure, confusion, frustration, or dissatisfaction."
+    unknown_handling: "Assign UNKNOWN if the review is entirely positive without friction."
+    allowed_labels:
+      - PAYMENT_MANDATE
+      - KYC
+      - UNCLEAR_STATUS
+      - NAV_UNITS
+      - SHORT_TERM_RETURN_INTERPRETATION
+      - RISK_COMPREHENSION
+      - TAXATION
+      - LIQUIDITY
+      - APP_NAVIGATION
+      - TRUST
+      - SUPPORT_DELAY
+
+    categories:
+      - code: PAYMENT_MANDATE
+        description: "UPI autopay failures, bank mandate rejection, NACH bounce penalties."
+        english_keywords: ["mandate rejected", "autopay failed", "upi error", "bounce charges", "bank rejection"]
+        hindi_keywords: ["ऑटोपे विफल", "बैंक अस्वीकृति", "बाउंस चार्ज"]
+        hinglish_keywords: ["autopay fail", "mandate reject ho gaya", "bank ne charge kaat liya", "nach fail"]
+
+      - code: KYC
+        description: "Pan verification delays, address mismatch, CKYC rejection, endless camera upload loops."
+        english_keywords: ["kyc rejected", "kyc pending", "pan card issue", "digilocker failed", "signature mismatch"]
+        hindi_keywords: ["केवाईसी अस्वीकृत", "केवाईसी लंबित", "पैन कार्ड समस्या"]
+        hinglish_keywords: ["kyc reject", "kyc pending hai", "pan verify nahi ho raha", "document upload issue"]
+
+      - code: UNCLEAR_STATUS
+        description: "Ambiguous transaction states ('In Progress', 'Processing') leaving user uncertain where money is."
+        english_keywords: ["unclear status", "in progress for days", "where is money", "confusing status", "no tracking"]
+        hindi_keywords: ["अस्पष्ट स्थिति", "पैसे कहां हैं", "प्रक्रिया में"]
+        hinglish_keywords: ["processing hi dikha raha", "paisa kahan gaya pata nahi", "confuse ho gaya"]
+
+      - code: NAV_UNITS
+        description: "Confusion regarding T+2 allotment delay, historical NAV vs today's NAV differences."
+        english_keywords: ["nav not allocated", "wrong nav date", "cut-off time confusion", "delayed units"]
+        hindi_keywords: ["एनएवी नहीं मिला", "यूनिट्स लेट मिलीं"]
+        hinglish_keywords: ["nav nahi mila", "units late aayi", "wrong nav lagaya"]
+
+      - code: SHORT_TERM_RETURN_INTERPRETATION
+        description: "Panic or anger over short-term negative returns (in red) during early months of investing."
+        english_keywords: ["in red", "loss in sip", "negative return", "portfolio down", "why losing money"]
+        hindi_keywords: ["घाटा हो रहा है", "लाल निशान", "पैसे डूब रहे हैं"]
+        hinglish_keywords: ["loss ho raha hai", "minus me chal raha hai", "red dikha raha hai", "paisa kam ho gaya"]
+
+      - code: RISK_COMPREHENSION
+        description: "Lack of understanding that mutual funds are subject to market volatility."
+        english_keywords: ["fraud", "cheating", "guaranteed promise broken", "misleading risk"]
+        hindi_keywords: ["धोखा", "जोखिम समझ नहीं आया"]
+        hinglish_keywords: ["dhokha hai", "paise kaat liye", "risk bataya nahi"]
+
+      - code: TAXATION
+        description: "Confusion over LTCG, STCG, TDS deductions, or missing ELSS tax receipts."
+        english_keywords: ["tax deduction", "ltcg", "stcg", "tds", "missing 80c receipt"]
+        hindi_keywords: ["कर कटौती", "टीडीएस", "टैक्स रसीद नहीं मिली"]
+        hinglish_keywords: ["tax cut gaya", "tds kyu kata", "tax receipt nahi mil rahi"]
+
+      - code: LIQUIDITY
+        description: "Delays or blocks when trying to redeem mutual funds back to bank account."
+        english_keywords: ["withdrawal delayed", "cannot withdraw", "redemption stuck", "bank credit pending"]
+        hindi_keywords: ["निकासी में देरी", "पैसे नहीं निकल रहे"]
+        hinglish_keywords: ["withdraw nahi ho raha", "paisa atka hua hai", "account me nahi aaya"]
+
+      - code: APP_NAVIGATION
+        description: "Cluttered UI, confusing tabs, inability to find SIP pause/cancel buttons."
+        english_keywords: ["confusing ui", "cannot find cancel button", "bad navigation", "hard to use", "cluttered"]
+        hindi_keywords: ["खराब यूआई", "बटन नहीं मिल रहा", "कठिन"]
+        hinglish_keywords: ["ui bakwas hai", "cancel button kahan hai", "samajh nahi aata option"]
+
+      - code: TRUST
+        description: "Severe breach of trust: unauthorized debits, missing funds, feeling scammed."
+        english_keywords: ["fraud app", "scam", "stole my money", "unauthorized debit", "do not trust"]
+        hindi_keywords: ["धोखाधड़ी", "चोरी", "विश्वास नहीं", "फ्रॉड"]
+        hinglish_keywords: ["fraud hai", "chor app", "scam chal raha hai", "bharosa nahi hai"]
+
+      - code: SUPPORT_DELAY
+        description: "Automated bot loops, unhelpful boilerplate replies, closed tickets without resolution."
+        english_keywords: ["support useless", "bot loop", "no human agent", "ticket closed without resolve", "no reply"]
+        hindi_keywords: ["सपोर्ट बेकार है", "कोई जवाब नहीं", "बॉट ही बात करता है"]
+        hinglish_keywords: ["bot reply kar raha", "support bakwas hai", "koi call nahi lagti", "ticket close kar diya"]
+
+  # =========================================================================
+  # DIMENSION F: TRIGGERS
+  # =========================================================================
+  triggers:
+    name: "Triggers"
+    description: "External or internal events that provoke a change in investor behavior or sentiment."
+    unknown_handling: "Default to UNKNOWN if behavior occurred without stated precipitating event."
+    allowed_labels:
+      - INCOME_CHANGE
+      - UNEXPECTED_EXPENSE
+      - MISSED_MANDATE
+      - MARKET_MOVEMENT
+      - LOW_PERCEIVED_PROGRESS
+      - TAX_EVENT
+      - FAMILY_ADVICE
+      - APP_INCIDENT
+      - LIFE_GOAL_CHANGE
+
+    categories:
+      - code: INCOME_CHANGE
+        description: "Job loss, salary hike, promotion, or bonus."
+        english_keywords: ["salary increased", "job loss", "lost job", "salary delayed", "got bonus"]
+        hindi_keywords: ["वेतन वृद्धि", "नौकरी छूटना", "बोनस"]
+        hinglish_keywords: ["salary badhi", "job chali gayi", "paisa nahi hai salary delay"]
+
+      - code: UNEXPECTED_EXPENSE
+        description: "Medical emergency, home repair, wedding expense requiring cash."
+        english_keywords: ["medical emergency", "urgent money needed", "hospital", "sudden expense"]
+        hindi_keywords: ["चिकित्सा आपातकाल", "अचानक खर्चा"]
+        hinglish_keywords: ["emergency aa gayi", "hospital ka kharcha", "paisa chahiye tha"]
+
+      - code: MISSED_MANDATE
+        description: "A failed debit triggering bank bounce penalty charges."
+        english_keywords: ["bank charged bounce fee", "penalty of 500", "mandate missed"]
+        hindi_keywords: ["बाउंस जुर्माना", "बैंक पेनाल्टी"]
+        hinglish_keywords: ["bank ne fine laga diya", "bounce charges kat gaye"]
+
+      - code: MARKET_MOVEMENT
+        description: "Broad market crash, sharp correction, or sudden bull run."
+        english_keywords: ["market crash", "nifty fell", "sensex down", "bear market"]
+        hindi_keywords: ["बाजार गिर गया", "गिरावट", "क्रैश"]
+        hinglish_keywords: ["market crash ho gaya", "nifty gir gaya", "down chal raha hai"]
+
+      - code: LOW_PERCEIVED_PROGRESS
+        description: "Disappointment after several months of investing with negligible visible gains."
+        english_keywords: ["no progress", "returns are negligible", "waste of 6 months", "barely made 100 rs"]
+        hindi_keywords: ["कोई प्रगति नहीं", "समय की बर्बादी"]
+        hinglish_keywords: ["kuch fayda nahi hua", "6 mahine me kuch nahi bana", "bekaar returns"]
+
+      - code: TAX_EVENT
+        description: "March financial year closing or receiving income tax filing notices."
+        english_keywords: ["march deadline", "itr filing", "tax season", "fy end"]
+        hindi_keywords: ["मार्च का महीना", "आईटीआर फाइलिंग"]
+        hinglish_keywords: ["tax season", "itr bharna hai", "march aane wala hai"]
+
+      - code: FAMILY_ADVICE
+        description: "Relative advising user to pull out of stocks or invest in gold/real estate."
+        english_keywords: ["parents told to withdraw", "uncle said market is gambling", "family advice"]
+        hindi_keywords: ["परिवार की सलाह", "घरवालों ने मना किया"]
+        hinglish_keywords: ["gharwalo ne bola", "papa ne kaha band karo", "share market jua hai bola"]
+
+      - code: APP_INCIDENT
+        description: "Major app outage, server downtime during market hours, or media news of glitch."
+        english_keywords: ["server down", "app glitch", "technical glitch on expiry", "login crashed"]
+        hindi_keywords: ["ऐप बंद हो गया", "सर्वर डाउन"]
+        hinglish_keywords: ["app khul nahi raha", "server down tha", "glitch aa gaya"]
+
+      - code: LIFE_GOAL_CHANGE
+        description: "Buying vehicle, relocating, marriage, or major life transition."
+        english_keywords: ["marriage", "buying car", "moving abroad", "higher studies"]
+        hindi_keywords: ["शादी", "गाड़ी खरीदना", "मकान"]
+        hinglish_keywords: ["shaadi ke liye", "car leni hai", "padhai ke liye"]
+
+  # =========================================================================
+  # DIMENSION G: OUTSIDE-APP COPING
+  # =========================================================================
+  outside_app_coping:
+    name: "Outside-App Coping Mechanisms"
+    description: "Channels or resources the investor turned to when facing confusion or unresolved app issues."
+    unknown_handling: "Default to NOT_STATED/UNKNOWN unless explicitly mentioned."
+    allowed_labels:
+      - SEARCH_ENGINE
+      - ONLINE_VIDEO
+      - FRIENDS_FAMILY
+      - FINANCIAL_ADVISER
+      - CUSTOMER_SUPPORT
+      - FINANCIAL_NEWS
+      - OTHER
+
+    categories:
+      - code: SEARCH_ENGINE
+        english_keywords: ["googled it", "searched on web", "google search"]
+        hindi_keywords: ["गूगल पर खोजा"]
+        hinglish_keywords: ["google kiya", "google pe dekha"]
+
+      - code: ONLINE_VIDEO
+        english_keywords: ["watched youtube tutorial", "video guide", "youtube video"]
+        hindi_keywords: ["यूट्यूब वीडियो देखा"]
+        hinglish_keywords: ["youtube par solution dekha", "video dekh ke samjha"]
+
+      - code: FRIENDS_FAMILY
+        english_keywords: ["asked a friend", "called brother", "colleague explained"]
+        hindi_keywords: ["दोस्त से पूछा", "भाई से मदद ली"]
+        hinglish_keywords: ["dost se help li", "bhai se pucha"]
+
+      - code: FINANCIAL_ADVISER
+        english_keywords: ["talked to ca", "financial planner", "consulted mutual fund agent"]
+        hindi_keywords: ["सीए से सलाह ली", "सलाहकार"]
+        hinglish_keywords: ["ca se baat ki", "advisor se pucha"]
+
+      - code: CUSTOMER_SUPPORT
+        english_keywords: ["reached bank branch", "called bank", "complained to amfi / sebi"]
+        hindi_keywords: ["बैंक शाखा गया", "सेबी में शिकायत"]
+        hinglish_keywords: ["bank gaya tha", "sebi me complaint ki"]
+
+      - code: FINANCIAL_NEWS
+        english_keywords: ["read moneycontrol", "financial express", "news article"]
+        hindi_keywords: ["अखबार में पढ़ा"]
+        hinglish_keywords: ["news me dekha"]
+
+      - code: OTHER
+        english_keywords: ["twitter / x complaint", "posted on reddit"]
+        hindi_keywords: ["सोशल मीडिया"]
+        hinglish_keywords: ["twitter pe tag kiya"]
+
+  # =========================================================================
+  # DIMENSION H: REPORTED OUTCOME
+  # =========================================================================
+  reported_outcome:
+    name: "Reported Outcome"
+    description: "The eventual resolution or status of the investor's SIP after the described journey."
+    unknown_handling: "Default to NOT_STATED if user does not state final action."
+    allowed_labels:
+      - CONTINUED
+      - REDUCED
+      - PAUSED
+      - STOPPED
+      - RESTARTED
+      - REDEEMED
+      - UNRESOLVED
+      - NOT_STATED
+
+    categories:
+      - code: CONTINUED
+        description: "Investor persevered and is actively continuing their SIP."
+        english_keywords: ["still investing", "continuing", "active investor", "happy with sip"]
+        hindi_keywords: ["जारी है", "चालू है"]
+        hinglish_keywords: ["continue kar raha hu", "chalu hai abhi bhi"]
+
+      - code: REDUCED
+        description: "Decreased installment amount due to budget constraints."
+        english_keywords: ["reduced amount", "lowered sip", "cut down installment"]
+        hindi_keywords: ["राशि कम की"]
+        hinglish_keywords: ["amount kam kar diya"]
+
+      - code: PAUSED
+        description: "Temporarily paused future installments."
+        english_keywords: ["paused", "on hold", "suspended temporarily"]
+        hindi_keywords: ["रोका गया"]
+        hinglish_keywords: ["pause par dala"]
+
+      - code: STOPPED
+        description: "Permanently cancelled SIP and autopay mandate."
+        english_keywords: ["cancelled", "stopped permanently", "deleted mandate", "uninstalled app"]
+        hindi_keywords: ["स्थायी रूप से बंद", "हटा दिया"]
+        hinglish_keywords: ["band kar diya", "delete kar diya", "uninstall kar raha hu"]
+
+      - code: RESTARTED
+        description: "Resumed after a gap."
+        english_keywords: ["restarted", "resumed"]
+        hindi_keywords: ["पुनः चालू"]
+        hinglish_keywords: ["dobara start kiya"]
+
+      - code: REDEEMED
+        description: "Pulled all money out of the funds."
+        english_keywords: ["withdrew all money", "cashed out", "exited fund"]
+        hindi_keywords: ["सारे पैसे निकाल लिए"]
+        hinglish_keywords: ["pura paisa nikal liya"]
+
+      - code: UNRESOLVED
+        description: "Left in an ongoing error state without resolution."
+        english_keywords: ["still waiting", "unresolved", "ticket still open", "money stuck"]
+        hindi_keywords: ["अभी तक हल नहीं हुआ", "पैसे अटके हैं"]
+        hinglish_keywords: ["abhi tak solve nahi hua", "atka hua hai"]
+
+      - code: NOT_STATED
+        description: "No outcome disclosed."
+        english_keywords: []
+        hindi_keywords: []
+        hinglish_keywords: []
+
+  # =========================================================================
+  # DIMENSION I: EXPLICITLY DISCLOSED SEGMENT INFORMATION
+  # =========================================================================
+  disclosed_segments:
+    name: "Explicitly Disclosed Segment Information"
+    description: "Demographic and contextual disclosures provided voluntarily and explicitly by the reviewer in the text."
+    strict_governance_rule: >
+      All segment attributes MUST default to UNKNOWN.
+      NEVER infer demographics, income level, location, or age from usernames, grammar, regional slang, or sentiment.
+      Only populate if reviewer explicitly states the attribute (e.g., 'I am a 21-year-old college student').
+    allowed_attributes:
+      age_band:
+        description: "Explicitly stated age or age group."
+        default: "UNKNOWN"
+        allowed_values:
+          - "STUDENT_COLLEGE"        # e.g., 'College student', '20 years old'
+          - "YOUNG_PROFESSIONAL"     # e.g., 'First job', '25 years old'
+          - "MID_CAREER"             # e.g., '35-45 years old', 'family with 2 kids'
+          - "RETIREE_SENIOR"         # e.g., 'Senior citizen', 'Retired person', '65 years old'
+          - "UNKNOWN"
+
+      income_stability:
+        description: "Explicitly disclosed nature of earnings."
+        default: "UNKNOWN"
+        allowed_values:
+          - "SALARIED_FIXED"         # e.g., 'Monthly salaried employee'
+          - "VARIABLE_GIG_BUSINESS"  # e.g., 'Freelancer', 'Small shop owner', 'Irregular income'
+          - "NON_EARNING_ALLOWANCE"  # e.g., 'Pocket money', 'Homemaker'
+          - "UNKNOWN"
+
+      money_source:
+        description: "Explicit origin of the money being invested."
+        default: "UNKNOWN"
+        allowed_values:
+          - "MONTHLY_SALARY"
+          - "POCKET_MONEY_SAVINGS"
+          - "GIFT_INHERITANCE"
+          - "BUSINESS_PROFIT"
+          - "UNKNOWN"
+
+      influence:
+        description: "Explicit external trigger that led to app install."
+        default: "UNKNOWN"
+        allowed_values:
+          - "SELF_DISCOVERED"
+          - "FRIEND_FAMILY"
+          - "FINFLUENCER_SOCIAL_MEDIA"
+          - "COLLEGE_OFFICE_PEER"
+          - "UNKNOWN"

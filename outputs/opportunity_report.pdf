@@ -1,0 +1,202 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 7 0 R /F2 8 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 4146 >>
+stream
+BT
+/F1 18 Tf
+50 740 Td
+(Groww SIP Opportunity Dossier) Tj
+/F2 11 Tf
+0 -22 Td
+(Prioritized Product Opportunities & Retention Hypotheses) Tj
+/F2 9 Tf
+0 -16 Td
+(Generated on: 2026-11-06 17:58:54 UTC | Groww Investor Discovery Engine) Tj
+0 -24 Td
+/F1 13 Tf
+0 -20 Td
+(#1 [OPP-06] Beginner Return Reality Context & Market Volatility Reassurance \(Score: 6.39\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S3_HABIT | Target App: Groww & INDmoney | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: First-time investors panic when their portfolio shows short-term negative returns within months 1-3, unaware t...) Tj
+0 -14 Td
+(Intervention: 1. 'Why Rupee-Cost Averaging Works' visual explainer during market dips.
+2. Show number of units accumulated a...) Tj
+0 -14 Td
+(Hypothesis: Framing market dips as 'Buying Units at a Discount' will reduce panic redemptions during the first 6 months by...) Tj
+0 -14 Td
+(Verbatim Quote: "Loss mein chal raha hai portfolio since 2 months, thought mutual fund gives guaranteed 15%.") Tj
+0 -14 Td
+(Score Factors: Prev=7.2, Sev=7.5, Crit=6.5, Act=9.0) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#2 [OPP-01] Proactive Mandate Status Tracker & Instant UPI Autopay Fallback \(Score: 6.38\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S1_SETUP | Target App: Groww & Peers | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: First-time investors encounter opaque bank mandate delays and e-mandate rejections, resulting in abandonment b...) Tj
+0 -14 Td
+(Intervention: 1. Live visual mandate stepper showing bank/NPCI verification stages.
+2. Instant 1-click fallback to alternate...) Tj
+0 -14 Td
+(Hypothesis: Providing real-time mandate progress and instant alternate payment fallback will increase S1 mandate success r...) Tj
+0 -14 Td
+(Verbatim Quote: "I started my first SIP but the mandate is not getting approved even after several attempts.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=9.5, Crit=10.0, Act=9.0) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#3 [OPP-04] Zero-Surprise Mandate Cancellation & Debit Termination Guarantee \(Score: 5.75\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S6_PAUSE_STOP | Target App: Groww & Paytm Money | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: Investors who cancel an active SIP experience continued autopay deductions due to NPCI mandate de-registration...) Tj
+0 -14 Td
+(Intervention: 1. Instant de-linking of autopay mandate with bank confirmation SMS within 2 hours.
+2. Immediate auto-refund p...) Tj
+0 -14 Td
+(Hypothesis: Providing an ironclad cancellation guarantee and immediate mandate revocation will protect platform trust and ...) Tj
+0 -14 Td
+(Verbatim Quote: "Even after stopping SIP money was deducted again from my bank account, worst experience.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=9.0, Crit=8.0, Act=8.5) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#4 [OPP-07] Priority Financial Transaction Support Escalation Pathway \(Score: 5.54\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S5_FRICTION | Target App: Groww & Angel One | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: Investors facing critical money deductions are trapped in automated AI bot loops with no human contact, turnin...) Tj
+0 -14 Td
+(Intervention: 1. Smart triage: Any ticket containing 'money deducted' or 'mandate fail' bypasses bot directly to Tier-2 huma...) Tj
+0 -14 Td
+(Hypothesis: Immediate human routing for money-deduction complaints will reduce 1-star review velocity by 35% and restore i...) Tj
+0 -14 Td
+(Verbatim Quote: "Customer support has not responded for 5 days, bot gives same useless automated replies.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=9.0, Crit=8.5, Act=8.0) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#5 [OPP-02] Transparent T+2 NAV & Unit Allotment Lifecycle Visualizer \(Score: 5.50\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S2_EARLY | Target App: Groww \(Primary\) | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: Money is deducted from the investor's bank account, but units are not allotted until T+2, leading beginner inv...) Tj
+0 -14 Td
+(Intervention: 1. 'Money Safe & In-Transit' status card immediately upon bank debit.
+2. Visual timeline showing Debit -> AMC ...) Tj
+0 -14 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 7 0 R /F2 8 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 2110 >>
+stream
+BT
+/F1 14 Tf
+50 740 Td
+(Groww SIP Opportunity Dossier - Continued) Tj
+0 -30 Td
+(Hypothesis: Displaying a proactive in-transit timeline immediately upon bank debit will reduce payment distress inquiries ...) Tj
+0 -14 Td
+(Verbatim Quote: "Paise kat gaye lekin units nahi mile abhi tak, amount deducted not reflected in portfolio.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=9.8, Crit=9.5, Act=9.5) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#6 [OPP-05] Automated Smart Autopay Recovery on Insufficient Balance \(Score: 4.91\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S5_FRICTION | Target App: Groww & Peers | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: Monthly instalment fails on salary delay, triggering bank bounce charges and silent SIP stoppage without user ...) Tj
+0 -14 Td
+(Intervention: 1. Balance check warning 24h prior to SIP due date.
+2. Smart retry engine attempting debit on Day +1, Day +3, ...) Tj
+0 -14 Td
+(Hypothesis: Implementing automated retry windows and manual UPI catch-up payments will recover 45% of missed monthly insta...) Tj
+0 -14 Td
+(Verbatim Quote: "Kisht miss ho gayi thi because salary was 1 day late, now sip is showing stopped.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=8.5, Crit=8.5, Act=8.5) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+/F1 13 Tf
+0 -20 Td
+(#7 [OPP-03] Frictionless 1-Click SIP Pause & Flexible Skip Mechanism \(Score: 4.86\)) Tj
+/F2 10 Tf
+0 -15 Td
+(Target Stage: S5_FRICTION | Target App: Groww & Zerodha Coin | Status: DISCOVERED) Tj
+0 -14 Td
+(Problem: Investors facing temporary cash crunches cannot easily pause or skip an instalment, forcing them into mandate ...) Tj
+0 -14 Td
+(Intervention: 1. 1-click 'Skip this Month' toggle directly on upcoming instalment cards.
+2. Preset pause duration \(1, 2, or ...) Tj
+0 -14 Td
+(Hypothesis: Offering a flexible, transparent pause option will prevent 30-35% of permanent SIP cancellations during short-...) Tj
+0 -14 Td
+(Verbatim Quote: "SIP pause feature is not working in this update, unable to pause next month instalment.") Tj
+0 -14 Td
+(Score Factors: Prev=2.0, Sev=8.0, Crit=8.5, Act=9.0) Tj
+0 -14 Td
+(---) Tj
+0 -14 Td
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+8 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000257 00000 n 
+0000004455 00000 n 
+0000004591 00000 n 
+0000006753 00000 n 
+0000006828 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+6898
+%%EOF
