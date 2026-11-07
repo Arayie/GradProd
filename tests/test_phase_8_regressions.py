@@ -100,22 +100,45 @@ def test_regression_issue_4_package_initialization():
 
 
 def test_regression_issue_5_postgres_schema_initialization_safety():
-    """Verify PostgreSQL schema initialization checks existence and avoids executescript."""
+    """Verify PostgreSQL schema initialization checks existence, handles missing files, and propagates errors."""
     db = DatabaseConnection()
     db.is_postgres = True
     db.raw_url = "postgresql://user:pass@host/db"
 
+    # Case A: Table already exists (idempotent, no DDL executed)
     with patch("sqlalchemy.create_engine") as mock_engine_factory:
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = mock_conn
-        # Simulate table already exists
         mock_conn.execute.return_value.scalar.return_value = "public.reviews"
         mock_engine_factory.return_value = mock_engine
 
-        # Should return without applying DDL
-        db._initialize_postgres_schema()
+        db.initialize_schema()
         assert mock_conn.execute.called
+
+    # Case B: Table does not exist (empty database, executes DDL from postgres_schema.sql)
+    with patch("sqlalchemy.create_engine") as mock_engine_factory:
+        mock_engine = MagicMock()
+        mock_conn = MagicMock()
+        mock_engine.connect.return_value.__enter__.return_value = mock_conn
+        mock_conn.execute.return_value.scalar.return_value = None  # Not existing
+        mock_engine_factory.return_value = mock_engine
+
+        db.initialize_schema()
+        # Verify statements were executed
+        assert mock_conn.execute.call_count > 1
+
+    # Case C: Missing schema file raises FileNotFoundError
+    with pytest.raises(FileNotFoundError):
+        db._initialize_postgres_schema(schema_file="/nonexistent/path/postgres_schema.sql")
+
+    # Case D: Database connection failure propagates RuntimeError without SQLite fallback
+    with patch("sqlalchemy.create_engine") as mock_engine_factory:
+        mock_engine_factory.side_effect = Exception("Connection timed out")
+        with pytest.raises(RuntimeError) as exc_info:
+            db.initialize_schema()
+        assert "PostgreSQL schema initialization failed" in str(exc_info.value)
+        assert db.is_postgres is True
 
 
 def test_regression_issue_6_all_16_pages_render_cleanly():

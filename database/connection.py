@@ -224,14 +224,14 @@ class DatabaseConnection:
     def initialize_schema(self, schema_file: str = None):
         """Executes the DDL schema to create tables and indexes."""
         if self.is_postgres:
-            self._initialize_postgres_schema()
+            self._initialize_postgres_schema(schema_file=schema_file)
             return
 
         if schema_file is None:
             schema_file = os.path.join(os.path.dirname(__file__), "schema.sql")
 
         if not os.path.exists(schema_file):
-            raise FileNotFoundError(f"Schema definition file not found at: {schema_file}")
+            raise FileNotFoundError(f"SQLite schema definition file not found at: {schema_file}")
 
         with open(schema_file, "r", encoding="utf-8") as f:
             ddl_script = f.read()
@@ -241,48 +241,53 @@ class DatabaseConnection:
 
         self.migrate_phase_3_columns()
 
-    def _initialize_postgres_schema(self):
+    def _initialize_postgres_schema(self, schema_file: str = None):
         """Ensures PostgreSQL schema tables and indexes exist without dropping existing data."""
         from sqlalchemy import create_engine, text
-        normalized_url = normalize_database_url(self.raw_url)
-        engine = create_engine(normalized_url)
 
+        if schema_file is None:
+            schema_file = os.path.join(os.path.dirname(__file__), "postgres_schema.sql")
+
+        if not os.path.exists(schema_file):
+            raise FileNotFoundError(f"PostgreSQL schema definition file not found at: {schema_file}")
+
+        normalized_url = normalize_database_url(self.raw_url)
         try:
+            engine = create_engine(normalized_url)
             with engine.connect() as conn:
-                # Check if tables already exist
+                # 1. Idempotency Check: check if tables already exist
                 table_exists = conn.execute(text("SELECT to_regclass('public.reviews');")).scalar()
                 if table_exists:
                     return
 
-                # If brand new database, apply DDL statements individually
-                from scripts.migrate_sqlite_to_postgres import generate_postgres_ddl_list
-                sqlite_conn = sqlite3.connect(DEFAULT_DB_PATH)
-                stmts = generate_postgres_ddl_list(sqlite_conn)
-                sqlite_conn.close()
+                # 2. If completely empty database, execute DDL statements individually from schema_file
+                with open(schema_file, "r", encoding="utf-8") as f:
+                    ddl_content = f.read()
 
-                for stmt in stmts:
-                    try:
+                statements = []
+                current_stmt = []
+                for line in ddl_content.splitlines():
+                    stripped = line.strip()
+                    if not stripped or stripped.startswith("--"):
+                        continue
+                    if stripped.upper() in ("BEGIN;", "COMMIT;"):
+                        continue
+                    current_stmt.append(line)
+                    if stripped.endswith(";"):
+                        stmt_text = "\n".join(current_stmt).strip()
+                        if stmt_text:
+                            statements.append(stmt_text)
+                        current_stmt = []
+
+                with conn.begin():
+                    for stmt in statements:
                         conn.execute(text(stmt))
-                        conn.commit()
-                    except Exception:
-                        conn.rollback()
+
         except Exception as exc:
             import logging
-            logging.getLogger("database").error(f"PostgreSQL schema initialization check: {exc}")
-
-        if schema_file is None:
-            schema_file = os.path.join(os.path.dirname(__file__), "schema.sql")
-
-        if not os.path.exists(schema_file):
-            raise FileNotFoundError(f"Schema definition file not found at: {schema_file}")
-
-        with open(schema_file, "r", encoding="utf-8") as f:
-            ddl_script = f.read()
-
-        with self.get_connection() as conn:
-            conn.executescript(ddl_script)
-
-        self.migrate_phase_3_columns()
+            masked = mask_connection_url(self.raw_url)
+            logging.getLogger("database").error(f"PostgreSQL schema initialization failed on {masked}: {exc}")
+            raise RuntimeError(f"PostgreSQL schema initialization failed on {masked}: {exc}") from exc
 
     def migrate_phase_3_columns(self):
         """Idempotently adds Phase 3 standardization, language, relevance, and quality columns."""
