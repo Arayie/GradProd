@@ -138,13 +138,16 @@ def export_to_postgres_sql(sqlite_path: str, output_path: str) -> Dict[str, int]
             if not rows:
                 continue
 
+            cols_info = cursor.execute(f"PRAGMA table_info({table});").fetchall()
+            col_type_map = {col[1]: col[2].upper() for col in cols_info}
             cols = [desc[0] for desc in cursor.description]
             cols_str = ", ".join(cols)
 
             for row in rows:
                 values = []
-                for val in row:
-                    if val is None:
+                for col_name, val in zip(cols, row):
+                    col_t = col_type_map.get(col_name, "")
+                    if val is None or (val == "" and ("TIME" in col_t or "DATE" in col_t or "INT" in col_t or "REAL" in col_t or "FLOAT" in col_t)):
                         values.append("NULL")
                     elif isinstance(val, (int, float)):
                         values.append(str(val))
@@ -197,16 +200,28 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
         counts[table] = len(rows)
         if rows:
             print(f"[*] Migrating {len(rows)} rows for '{table}'...")
+            cols_info = sqlite_cur.execute(f"PRAGMA table_info({table});").fetchall()
+            col_type_map = {col[1]: col[2].upper() for col in cols_info}
             cols = [desc[0] for desc in sqlite_cur.description]
             placeholders = ", ".join([f":{col}" for col in cols])
             insert_stmt = text(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING")
-            data = [dict(zip(cols, row)) for row in rows]
             
+            # Clean data: convert empty strings in timestamp/numeric columns to None (SQL NULL)
+            cleaned_data = []
+            for row in rows:
+                row_dict = {}
+                for col_name, val in zip(cols, row):
+                    col_t = col_type_map.get(col_name, "")
+                    if val == "" and ("TIME" in col_t or "DATE" in col_t or "INT" in col_t or "REAL" in col_t or "FLOAT" in col_t):
+                        val = None
+                    row_dict[col_name] = val
+                cleaned_data.append(row_dict)
+
             # Batch execute in chunks of 100 to prevent parameter limits
             batch_size = 100
             with pg_engine.connect() as pg_conn:
-                for i in range(0, len(data), batch_size):
-                    chunk = data[i:i + batch_size]
+                for i in range(0, len(cleaned_data), batch_size):
+                    chunk = cleaned_data[i:i + batch_size]
                     pg_conn.execute(insert_stmt, chunk)
                     pg_conn.commit()
 
