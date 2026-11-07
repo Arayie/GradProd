@@ -75,7 +75,14 @@ class DatabaseConnection:
     def get_cursor(self):
         """Context manager yielding a managed cursor."""
         with self.get_connection() as conn:
-            cursor = conn.cursor()
+            if self.is_postgres:
+                try:
+                    import psycopg2.extras
+                    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                except Exception:
+                    cursor = conn.cursor()
+            else:
+                cursor = conn.cursor()
             try:
                 yield cursor
             finally:
@@ -83,6 +90,10 @@ class DatabaseConnection:
 
     def initialize_schema(self, schema_file: str = None):
         """Executes the DDL schema to create tables and indexes."""
+        if self.is_postgres:
+            # PostgreSQL schema is managed via migration scripts
+            return
+
         if schema_file is None:
             schema_file = os.path.join(os.path.dirname(__file__), "schema.sql")
 
@@ -99,6 +110,8 @@ class DatabaseConnection:
 
     def migrate_phase_3_columns(self):
         """Idempotently adds Phase 3 standardization, language, relevance, and quality columns."""
+        if self.is_postgres:
+            return
         new_columns = [
             ("review_text_original", "TEXT"),
             ("app_name", "TEXT"),

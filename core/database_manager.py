@@ -33,8 +33,9 @@ class DatabaseManager:
 
     def initialize(self):
         """Creates tables, indexes, and syncs YAML configurations into SQLite."""
-        self.db.initialize_schema()
-        self.sync_configurations()
+        if not getattr(self.db, "is_postgres", False):
+            self.db.initialize_schema()
+            self.sync_configurations()
 
     def sync_configurations(self):
         """Reads apps.yml and source_access.yml and syncs to database."""
