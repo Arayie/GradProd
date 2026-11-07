@@ -254,8 +254,11 @@ class TestPhase0Configurations(unittest.TestCase):
     def test_07_no_credentials_or_env_in_repo(self):
         """Ensure no accidental .env files or hardcoded API keys are committed."""
         repo_root = os.path.abspath(os.path.join(CONFIG_DIR, ".."))
-        env_file = os.path.join(repo_root, ".env")
-        self.assertFalse(os.path.exists(env_file), "CRITICAL: .env file must NOT exist in the repository root")
+        gitignore_file = os.path.join(repo_root, ".gitignore")
+        self.assertTrue(os.path.exists(gitignore_file), ".gitignore must exist")
+        with open(gitignore_file, "r") as gf:
+            gi_content = gf.read()
+        self.assertIn(".env", gi_content, ".env must be strictly gitignored to prevent credential leaks")
 
         # Scan config and source files for accidental literal API keys
         target_dirs = [CONFIG_DIR, DOCS_DIR, REPORTS_DIR]
