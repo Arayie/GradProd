@@ -1,5 +1,5 @@
 # Growww – AI-Powered Investor Discovery Engine
-# Phase 1: Repository and Application Foundation Requirements
+# Production Package Dependencies (Streamlit Cloud & Render)
 
 streamlit>=1.30.0
 pandas>=2.0.0
@@ -8,3 +8,5 @@ pyyaml>=6.0.0
 python-dotenv>=1.0.0
 pytest>=8.0.0
 plotly>=5.18.0
+psycopg2-binary>=2.9.0
+requests>=2.31.0

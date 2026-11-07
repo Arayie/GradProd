@@ -1,0 +1,35 @@
+# ==============================================================================
+# GROWWW INVESTOR DISCOVERY ENGINE – RENDER BLUEPRINT SPECIFICATION
+# ==============================================================================
+# Deploys the persistent PostgreSQL database and optional Backend API on Render.
+# ==============================================================================
+
+databases:
+  # ----------------------------------------------------------------------------
+  # 1. MANAGED POSTGRESQL DATABASE (PERSISTENT DATA BACKEND)
+  # ----------------------------------------------------------------------------
+  - name: growww-postgres
+    databaseName: growww_discovery
+    user: growww_user
+    plan: free # or starter
+    ipAllowList: [] # Allows connections from Streamlit Cloud & external tools
+
+services:
+  # ----------------------------------------------------------------------------
+  # 2. OPTIONAL BACKEND API & BACKGROUND WORKER
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: growww-backend-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 api_backend.py
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: growww-postgres
+          property: connectionString
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO

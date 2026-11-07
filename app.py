@@ -59,11 +59,6 @@ def main():
     """Main routing and execution function."""
     init_app()
     apply_custom_styles()
-
-    # Enforce authentication gate in production mode
-    if not AuthService.check_auth_gate():
-        return
-
     current_page = render_sidebar()
 
     # SECTION 1: OVERVIEW
