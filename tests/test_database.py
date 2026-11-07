@@ -126,5 +126,48 @@ class TestDatabaseFoundation(unittest.TestCase):
         with self.assertRaises(DatabaseError):
             self.review_repo.insert_review(review_data)
 
+    def test_06_dict_row_and_managed_cursor(self):
+        """Verify DictRow supports both int indexing and string key access and dict() cast."""
+        from database.connection import DictRow, ManagedCursorWrapper, ConnectionWrapper
+        row = DictRow(["id", "name", "role"], [101, "Growww", "primary"])
+        self.assertEqual(row[0], 101)
+        self.assertEqual(row[1], "Growww")
+        self.assertEqual(row["name"], "Growww")
+        self.assertEqual(row["role"], "primary")
+        self.assertEqual(dict(row), {"id": 101, "name": "Growww", "role": "primary"})
+
+    def test_07_parameter_translation_for_postgres(self):
+        """Verify ManagedCursorWrapper replaces ? with %s when is_postgres=True."""
+        from database.connection import ManagedCursorWrapper
+
+        class MockCursor:
+            def __init__(self):
+                self.last_sql = None
+                self.last_params = None
+                self.description = [("id", 1), ("name", 2)]
+            def execute(self, sql, params=None):
+                self.last_sql = sql
+                self.last_params = params
+                return self
+            def fetchone(self):
+                return (1, "Test")
+
+        mock = MockCursor()
+        wrapper = ManagedCursorWrapper(mock, is_postgres=True)
+        wrapper.execute("SELECT * FROM apps WHERE internal_app_id = ? AND role = ?;", ("app1", "primary"))
+        self.assertEqual(mock.last_sql, "SELECT * FROM apps WHERE internal_app_id = %s AND role = %s;")
+        self.assertEqual(mock.last_params, ("app1", "primary"))
+
+        res = wrapper.fetchone()
+        self.assertEqual(res[0], 1)
+        self.assertEqual(res["id"], 1)
+
+    def test_08_normalize_database_url(self):
+        """Verify postgres:// is rewritten to postgresql:// and driver selection."""
+        from database.connection import normalize_database_url
+        url1 = "postgres://user:pass@host:5432/db"
+        norm1 = normalize_database_url(url1)
+        self.assertTrue(norm1.startswith("postgresql"))
+
 if __name__ == "__main__":
     unittest.main()

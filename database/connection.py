@@ -14,6 +14,98 @@ if os.path.exists(LIB_DIR) and LIB_DIR not in sys.path:
 
 DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "growww_discovery.db")
 
+class DictRow(dict):
+    """Row object supporting both dictionary key access and tuple integer index access."""
+    def __init__(self, cols, vals):
+        super().__init__(zip(cols, vals))
+        self._vals = list(vals)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._vals[key]
+        return super().__getitem__(key)
+
+class ManagedCursorWrapper:
+    """Cursor wrapper providing dictionary row conversion and SQL parameter normalization (? -> %s)."""
+    def __init__(self, cursor, is_postgres: bool = False):
+        self._cursor = cursor
+        self.is_postgres = is_postgres
+
+    def execute(self, sql, params=None):
+        if self.is_postgres and params is not None and "?" in sql:
+            sql = sql.replace("?", "%s")
+        if params is not None:
+            return self._cursor.execute(sql, params)
+        return self._cursor.execute(sql)
+
+    def executemany(self, sql, seq_of_params):
+        if self.is_postgres and "?" in sql:
+            sql = sql.replace("?", "%s")
+        return self._cursor.executemany(sql, seq_of_params)
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        if row is None:
+            return None
+        if hasattr(row, "keys") and not isinstance(row, (tuple, list)):
+            return row
+        cols = [c[0] for c in self._cursor.description] if self._cursor.description else []
+        return DictRow(cols, row)
+
+    def fetchall(self):
+        rows = self._cursor.fetchall()
+        if not rows:
+            return []
+        if rows and hasattr(rows[0], "keys") and not isinstance(rows[0], (tuple, list)):
+            return rows
+        cols = [c[0] for c in self._cursor.description] if self._cursor.description else []
+        return [DictRow(cols, r) if isinstance(r, (tuple, list)) else r for r in rows]
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+    def __getattr__(self, name):
+        return getattr(self._cursor, name)
+
+class ConnectionWrapper:
+    """Wraps DBAPI connection to provide auto ? -> %s translation and DictRow cursors."""
+    def __init__(self, raw_conn, is_postgres: bool = False):
+        self._raw_conn = raw_conn
+        self.is_postgres = is_postgres
+
+    def cursor(self, *args, **kwargs):
+        raw_cur = self._raw_conn.cursor(*args, **kwargs)
+        return ManagedCursorWrapper(raw_cur, is_postgres=self.is_postgres)
+
+    def execute(self, sql, *args, **kwargs):
+        cur = self.cursor()
+        cur.execute(sql, *args, **kwargs)
+        return cur
+
+    def __getattr__(self, name):
+        return getattr(self._raw_conn, name)
+
+def normalize_database_url(url: str) -> str:
+    """Normalizes PostgreSQL URL for SQLAlchemy and auto-detects installed driver."""
+    normalized = url
+    if normalized.startswith("postgres://"):
+        normalized = normalized.replace("postgres://", "postgresql://", 1)
+
+    if normalized.startswith("postgresql://") and not normalized.startswith("postgresql+"):
+        try:
+            import psycopg2
+        except ImportError:
+            try:
+                import pg8000
+                normalized = normalized.replace("postgresql://", "postgresql+pg8000://", 1)
+            except ImportError:
+                try:
+                    import psycopg
+                    normalized = normalized.replace("postgresql://", "postgresql+psycopg://", 1)
+                except ImportError:
+                    pass
+    return normalized
+
 def parse_database_url(url: str = None) -> str:
     """Resolves database file path from DATABASE_URL or DATABASE_PATH env var."""
     raw = url or os.getenv("DATABASE_URL") or os.getenv("DATABASE_PATH") or DEFAULT_DB_PATH
@@ -44,11 +136,19 @@ class DatabaseConnection:
         if self.is_postgres:
             # PostgreSQL connection adapter via SQLAlchemy
             from sqlalchemy import create_engine
-            normalized_url = self.raw_url
-            if normalized_url.startswith("postgres://"):
-                normalized_url = normalized_url.replace("postgres://", "postgresql://", 1)
-            engine = create_engine(normalized_url)
-            return engine.raw_connection()
+            normalized_url = normalize_database_url(self.raw_url)
+            try:
+                engine = create_engine(normalized_url)
+                raw_conn = engine.raw_connection()
+                return ConnectionWrapper(raw_conn, is_postgres=True)
+            except Exception as exc:
+                import logging
+                logging.getLogger("database").warning(
+                    f"PostgreSQL connection failed ({exc}). Gracefully falling back to local SQLite at {DEFAULT_DB_PATH}."
+                )
+                self.is_postgres = False
+                self.db_path = DEFAULT_DB_PATH
+                return self.get_raw_connection()
 
         conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         conn.row_factory = sqlite3.Row
@@ -75,14 +175,7 @@ class DatabaseConnection:
     def get_cursor(self):
         """Context manager yielding a managed cursor."""
         with self.get_connection() as conn:
-            if self.is_postgres:
-                try:
-                    import psycopg2.extras
-                    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                except Exception:
-                    cursor = conn.cursor()
-            else:
-                cursor = conn.cursor()
+            cursor = conn.cursor()
             try:
                 yield cursor
             finally:

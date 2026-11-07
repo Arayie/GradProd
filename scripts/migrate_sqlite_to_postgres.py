@@ -264,7 +264,8 @@ def run_dry_run_plan(sqlite_path: str, pg_url: Optional[str] = None):
     pg_engine = None
     if pg_url:
         from sqlalchemy import create_engine
-        normalized_url = pg_url.replace("postgres://", "postgresql://", 1) if pg_url.startswith("postgres://") else pg_url
+        from database.connection import normalize_database_url
+        normalized_url = normalize_database_url(pg_url)
         pg_engine = create_engine(normalized_url)
 
     print(f"{'Table Name':<25} | {'Source Rows':<12} | {'Cols':<5} | {'Dest Rows':<10} | {'Status'}")
@@ -305,8 +306,9 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
     """Connects to live PostgreSQL instance and streams data with validation and safe quoting."""
     from sqlalchemy import create_engine, text
 
-    # Normalize Render URL if starts with postgres://
-    normalized_url = pg_url.replace("postgres://", "postgresql://", 1) if pg_url.startswith("postgres://") else pg_url
+    # Normalize Render URL and select available driver (psycopg2 or pg8000)
+    from database.connection import normalize_database_url
+    normalized_url = normalize_database_url(pg_url)
     masked_url = mask_connection_url(normalized_url)
 
     sqlite_conn = sqlite3.connect(sqlite_path)
