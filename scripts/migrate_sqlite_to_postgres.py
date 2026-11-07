@@ -2,6 +2,7 @@
 """
 Growww Discovery Engine – SQLite to PostgreSQL Migration Engine (Phase 8)
 Safely migrates schema and review records from SQLite to PostgreSQL with row count parity checks.
+Executes individual DDL statements to ensure 100% compatibility with SQLAlchemy 2.0 and PostgreSQL.
 """
 
 import os
@@ -51,18 +52,12 @@ def adapt_sqlite_type_to_postgres(col_type: str) -> str:
         return "TIMESTAMP WITHOUT TIME ZONE"
     return "TEXT"
 
-def generate_postgres_ddl(sqlite_conn: sqlite3.Connection) -> str:
-    """Generates PostgreSQL-compatible CREATE TABLE and INDEX DDL statements."""
+def generate_postgres_ddl_list(sqlite_conn: sqlite3.Connection) -> List[str]:
+    """Generates a list of individual PostgreSQL DDL statements."""
     cursor = sqlite_conn.cursor()
-    ddl_statements = [
-        "-- GROWWW INVESTOR DISCOVERY ENGINE",
-        "-- POSTGRESQL PRODUCTION DDL MIGRATION SCRIPT",
-        "-- Generated automatically for Phase 8 Deployment\n",
-        "BEGIN;\n"
-    ]
+    statements = []
 
     for table in MIGRATION_TABLES:
-        # Check if table exists in SQLite
         table_exists = cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()
@@ -85,10 +80,11 @@ def generate_postgres_ddl(sqlite_conn: sqlite3.Connection) -> str:
                 pk_cols.append(col_name)
 
         if pk_cols:
-            col_defs.append(f"    PRIMARY KEY ({', '.join(pk_cols)})")
+            pk_str = ", ".join(pk_cols)
+            col_defs.append(f"    PRIMARY KEY ({pk_str})")
 
-        ddl = f"CREATE TABLE IF NOT EXISTS {table} (\n" + ",\n".join(col_defs) + "\n);\n"
-        ddl_statements.append(ddl)
+        ddl = f"CREATE TABLE IF NOT EXISTS {table} (\n" + ",\n".join(col_defs) + "\n)"
+        statements.append(ddl)
 
     # Indexes
     indexes = cursor.execute(
@@ -96,10 +92,23 @@ def generate_postgres_ddl(sqlite_conn: sqlite3.Connection) -> str:
     ).fetchall()
     for name, sql in indexes:
         if not name.startswith("sqlite_autoindex"):
-            ddl_statements.append(f"{sql};\n")
+            safe_sql = re.sub(r"^CREATE\s+INDEX\s+", "CREATE INDEX IF NOT EXISTS ", sql.strip(), flags=re.IGNORECASE)
+            statements.append(safe_sql)
 
-    ddl_statements.append("COMMIT;\n")
-    return "\n".join(ddl_statements)
+    return statements
+
+def generate_postgres_ddl(sqlite_conn: sqlite3.Connection) -> str:
+    """Generates PostgreSQL-compatible CREATE TABLE and INDEX DDL statements for file export."""
+    stmts = generate_postgres_ddl_list(sqlite_conn)
+    header = [
+        "-- GROWWW INVESTOR DISCOVERY ENGINE",
+        "-- POSTGRESQL PRODUCTION DDL MIGRATION SCRIPT",
+        "-- Generated automatically for Phase 8 Deployment\n",
+        "BEGIN;\n"
+    ]
+    body = [f"{s};\n" for s in stmts]
+    footer = ["COMMIT;\n"]
+    return "\n".join(header + body + footer)
 
 def export_to_postgres_sql(sqlite_path: str, output_path: str) -> Dict[str, int]:
     """Dumps SQLite schema and data into a PostgreSQL-compatible SQL script."""
@@ -156,12 +165,18 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
     sqlite_conn = sqlite3.connect(sqlite_path)
     pg_engine = create_engine(pg_url)
 
-    # 1. Apply DDL
+    # 1. Apply DDL statement by statement (avoids SQLAlchemy 2.0 multi-statement error tw8g)
     print("[*] Creating PostgreSQL tables and schema indexes...")
-    ddl_sql = generate_postgres_ddl(sqlite_conn)
+    ddl_statements = generate_postgres_ddl_list(sqlite_conn)
     with pg_engine.connect() as pg_conn:
-        pg_conn.execute(text(ddl_sql))
-        pg_conn.commit()
+        for stmt in ddl_statements:
+            try:
+                pg_conn.execute(text(stmt))
+                pg_conn.commit()
+            except Exception as e:
+                pg_conn.rollback()
+                if "already exists" not in str(e).lower():
+                    print(f"    [!] Notice on DDL: {e}")
 
     # 2. Transfer rows with batch chunking
     counts = {}
@@ -182,13 +197,13 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
             insert_stmt = text(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING")
             data = [dict(zip(cols, row)) for row in rows]
             
-            # Batch execute in chunks of 200 to prevent parameter overflow
-            batch_size = 200
+            # Batch execute in chunks of 100 to prevent parameter limits
+            batch_size = 100
             with pg_engine.connect() as pg_conn:
                 for i in range(0, len(data), batch_size):
                     chunk = data[i:i + batch_size]
                     pg_conn.execute(insert_stmt, chunk)
-                pg_conn.commit()
+                    pg_conn.commit()
 
     sqlite_conn.close()
     return counts
