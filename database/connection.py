@@ -4,7 +4,11 @@ Provides thread-safe connections, transaction context managers, and SQLite / SQL
 """
 import os
 import sys
+import time
+import logging
 import sqlite3
+from typing import Dict, Any, Optional
+from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from contextlib import contextmanager
 
 # Ensure workspace root is always at the front of sys.path
@@ -98,15 +102,64 @@ def mask_connection_url(url: str) -> str:
     return url
 
 def normalize_database_url(url: str) -> str:
-    """Normalizes PostgreSQL URL for SQLAlchemy using the explicit psycopg2 driver."""
+    """
+    Normalizes PostgreSQL URL for SQLAlchemy using explicit postgresql+psycopg2 driver
+    and strictly enforces sslmode=require without query parameter corruption or duplication.
+    """
     if not url:
         return url
     normalized = url.strip()
-    if normalized.startswith("postgres://"):
-        normalized = normalized.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif normalized.startswith("postgresql://") and not normalized.startswith("postgresql+"):
-        normalized = normalized.replace("postgresql://", "postgresql+psycopg2://", 1)
-    return normalized
+    if not (normalized.startswith("postgres://") or normalized.startswith("postgresql://") or normalized.startswith("postgresql+")):
+        return normalized
+
+    parts = urlsplit(normalized)
+    scheme = "postgresql+psycopg2"
+    query_params = parse_qs(parts.query, keep_blank_values=True)
+    
+    # Strictly enforce sslmode=require
+    query_params["sslmode"] = ["require"]
+    new_query = urlencode(query_params, doseq=True)
+
+    return urlunsplit((scheme, parts.netloc, parts.path, new_query, parts.fragment))
+
+def get_env_database_url() -> str:
+    """
+    Retrieves DATABASE_URL from environment variables or Streamlit secrets.
+    Safely inspects st.secrets if available without raising when running outside Streamlit.
+    """
+    url = os.getenv("DATABASE_URL", "").strip()
+    if url:
+        return url
+
+    # Inspect Streamlit Cloud secrets if available
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets"):
+            if "DATABASE_URL" in st.secrets:
+                val = str(st.secrets["DATABASE_URL"]).strip()
+                if val:
+                    return val
+            # Check nested dictionary structures e.g. [postgres] or [database]
+            for sec_key in ("postgres", "database", "postgresql", "render"):
+                if sec_key in st.secrets:
+                    sec = st.secrets[sec_key]
+                    if isinstance(sec, dict):
+                        if "url" in sec and sec["url"]:
+                            return str(sec["url"]).strip()
+                        if "DATABASE_URL" in sec and sec["DATABASE_URL"]:
+                            return str(sec["DATABASE_URL"]).strip()
+                        # Assemble components if separate
+                        if "host" in sec and ("user" in sec or "username" in sec):
+                            user = sec.get("user") or sec.get("username")
+                            pwd = sec.get("password", "")
+                            host = sec.get("host")
+                            port = sec.get("port", 5432)
+                            dbname = sec.get("dbname") or sec.get("database", "growww_discovery")
+                            return f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{dbname}?sslmode=require"
+    except Exception:
+        pass
+
+    return ""
 
 class ManagedConnectionContext:
     """Provides a managed connection supporting both context manager usage and direct method access."""
@@ -162,16 +215,22 @@ def parse_database_url(url: str = None) -> str:
     return raw
 
 class DatabaseConnection:
-    """Manages SQLite / PostgreSQL database connections and schema setup."""
+    """Manages SQLite / PostgreSQL database connections, pooling, verification, and schema setup."""
 
     def __init__(self, db_path: str = None):
-        self.raw_url = os.getenv("DATABASE_URL", "")
+        env_url = get_env_database_url()
+        if db_path and (db_path.startswith("postgres://") or db_path.startswith("postgresql://") or db_path.startswith("postgresql+")):
+            self.raw_url = db_path
+        else:
+            self.raw_url = env_url
+            
         self.is_postgres = (
             self.raw_url.startswith("postgres://") or
             self.raw_url.startswith("postgresql://") or
             self.raw_url.startswith("postgresql+")
         )
         self.db_path = db_path or parse_database_url(self.raw_url)
+        self._engine = None
         if not self.is_postgres:
             self._ensure_directory()
 
@@ -181,21 +240,92 @@ class DatabaseConnection:
         if directory and not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
 
-    def get_raw_connection(self):
-        """Returns a configured connection with foreign keys and WAL mode enabled."""
-        if self.is_postgres:
-            # PostgreSQL connection adapter via SQLAlchemy with explicit psycopg2 driver
+    def get_engine(self):
+        """Returns cached SQLAlchemy Engine with configured connection pool and SSL settings."""
+        if not self.is_postgres:
+            return None
+        if self._engine is None:
             from sqlalchemy import create_engine
             normalized_url = normalize_database_url(self.raw_url)
+            self._engine = create_engine(
+                normalized_url,
+                pool_pre_ping=True,      # Tests connection liveness before checkout to prevent dead sockets
+                pool_size=5,             # Bounded pool size suitable for Render PostgreSQL and Streamlit Cloud
+                max_overflow=10,         # Maximum overflow connections
+                pool_recycle=300,        # Recycle connections every 5 min to prevent Render idle timeout drops
+                pool_timeout=20,         # Maximum wait for a connection before timeout
+                connect_args={
+                    "sslmode": "require",
+                    "connect_timeout": 15,
+                    "keepalives": 1,
+                    "keepalives_idle": 30,
+                    "keepalives_interval": 10,
+                    "keepalives_count": 5,
+                }
+            )
+        return self._engine
+
+    def verify_connection(self, max_retries: int = 3, retry_delay: float = 2.0) -> Dict[str, Any]:
+        """
+        Verifies database connectivity with bounded exponential backoff retries.
+        Runs 'SELECT 1;' and verifies database identity.
+        Fails fast on authentication/credential errors.
+        Retries transient SSL drops or sleeping Render instances.
+        """
+        if not self.is_postgres:
+            with self.get_connection() as conn:
+                res = conn.execute("SELECT 1;").fetchone()
+                return {"status": "ok", "dialect": "sqlite", "verified": bool(res)}
+
+        from sqlalchemy import text
+        import time
+        engine = self.get_engine()
+        last_error = None
+
+        for attempt in range(1, max_retries + 1):
             try:
-                engine = create_engine(normalized_url)
+                with engine.connect() as conn:
+                    check = conn.execute(text("SELECT 1;")).scalar()
+                    db_name = conn.execute(text("SELECT current_database();")).scalar()
+                    db_user = conn.execute(text("SELECT current_user;")).scalar()
+                    return {
+                        "status": "ok",
+                        "dialect": "postgresql",
+                        "database": db_name,
+                        "user": db_user,
+                        "verified": bool(check),
+                        "attempt": attempt,
+                    }
+            except Exception as exc:
+                last_error = exc
+                err_str = str(exc).lower()
+                # Fail fast on authentication/authorization errors
+                if any(k in err_str for k in ("password authentication failed", "permission denied", "does not exist", "unknown user")):
+                    masked = mask_connection_url(self.raw_url)
+                    raise RuntimeError(f"Database authentication failed on {masked}: {exc}") from exc
+
+                # For transient SSL or sleeping Render instances, wait and retry
+                if attempt < max_retries:
+                    wait_time = retry_delay * (1.5 ** (attempt - 1))
+                    time.sleep(wait_time)
+                else:
+                    masked = mask_connection_url(self.raw_url)
+                    raise RuntimeError(
+                        f"PostgreSQL connection verification failed after {max_retries} attempts ({masked}): {last_error}"
+                    ) from last_error
+
+    def get_raw_connection(self):
+        """Returns a configured connection with foreign keys and WAL mode enabled (SQLite) or pooled connection (Postgres)."""
+        if self.is_postgres:
+            engine = self.get_engine()
+            try:
                 raw_conn = engine.raw_connection()
                 return ConnectionWrapper(raw_conn, is_postgres=True)
             except Exception as exc:
                 masked = mask_connection_url(self.raw_url)
                 # In production mode, NEVER silently fall back to local SQLite
                 raise RuntimeError(
-                    f"Production PostgreSQL database connection failed ({masked}): {exc}. "
+                    f"Production PostgreSQL database connection checkout failed ({masked}): {exc}. "
                     f"Verify DATABASE_URL and Render database status."
                 ) from exc
 
@@ -243,7 +373,7 @@ class DatabaseConnection:
 
     def _initialize_postgres_schema(self, schema_file: str = None):
         """Ensures PostgreSQL schema tables and indexes exist without dropping existing data."""
-        from sqlalchemy import create_engine, text
+        from sqlalchemy import text
 
         if schema_file is None:
             schema_file = os.path.join(os.path.dirname(__file__), "postgres_schema.sql")
@@ -251,16 +381,23 @@ class DatabaseConnection:
         if not os.path.exists(schema_file):
             raise FileNotFoundError(f"PostgreSQL schema definition file not found at: {schema_file}")
 
-        normalized_url = normalize_database_url(self.raw_url)
+        # 1. Verify connection first with bounded retries
         try:
-            engine = create_engine(normalized_url)
+            self.verify_connection()
+        except Exception as exc:
+            masked = mask_connection_url(self.raw_url)
+            logging.getLogger("database").error(f"PostgreSQL schema initialization connection check failed on {masked}: {exc}")
+            raise RuntimeError(f"PostgreSQL schema initialization failed on {masked}: {exc}") from exc
+
+        engine = self.get_engine()
+        try:
             with engine.connect() as conn:
-                # 1. Idempotency Check: check if tables already exist
+                # 2. Idempotency Check: check if tables already exist
                 table_exists = conn.execute(text("SELECT to_regclass('public.reviews');")).scalar()
                 if table_exists:
                     return
 
-                # 2. If completely empty database, execute DDL statements individually from schema_file
+                # 3. If completely empty database, execute DDL statements individually from schema_file
                 with open(schema_file, "r", encoding="utf-8") as f:
                     ddl_content = f.read()
 
@@ -284,7 +421,6 @@ class DatabaseConnection:
                         conn.execute(text(stmt))
 
         except Exception as exc:
-            import logging
             masked = mask_connection_url(self.raw_url)
             logging.getLogger("database").error(f"PostgreSQL schema initialization failed on {masked}: {exc}")
             raise RuntimeError(f"PostgreSQL schema initialization failed on {masked}: {exc}") from exc

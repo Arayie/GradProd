@@ -280,13 +280,13 @@ CREATE TABLE IF NOT EXISTS "opportunity_audits" (
     PRIMARY KEY ("audit_id")
 );
 
-CREATE INDEX IF NOT EXISTS idx_apps_internal_id ON apps(internal_app_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_apps_internal_id ON apps(internal_app_id);
 
 CREATE INDEX IF NOT EXISTS idx_apps_apple_id ON apps(apple_app_id);
 
 CREATE INDEX IF NOT EXISTS idx_apps_play_package ON apps(google_play_package);
 
-CREATE INDEX IF NOT EXISTS idx_source_routes_id ON source_routes(source_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_source_routes_id ON source_routes(source_id);
 
 CREATE INDEX IF NOT EXISTS idx_reviews_app_store ON reviews(app_id, store);
 
@@ -307,6 +307,8 @@ CREATE INDEX IF NOT EXISTS idx_collection_errors_run ON collection_errors(run_id
 CREATE INDEX IF NOT EXISTS idx_import_batches_app ON import_batches(app_id);
 
 CREATE INDEX IF NOT EXISTS idx_checkpoints_app ON collection_checkpoints(app_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_checkpoints_composite ON collection_checkpoints(app_id, storefront, collection_method);
 
 CREATE INDEX IF NOT EXISTS idx_reviews_sip_relevance ON reviews(sip_relevance_status);
 

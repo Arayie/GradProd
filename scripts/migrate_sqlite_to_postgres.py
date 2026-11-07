@@ -170,11 +170,24 @@ def generate_postgres_ddl(sqlite_conn: sqlite3.Connection) -> str:
     footer = ["COMMIT;\n"]
     return "\n".join(header + body + footer)
 
-def clean_value_for_postgres(val: Any, col_type: str) -> Any:
-    """Converts empty strings in timestamps, dates, or numeric columns to None (SQL NULL)."""
-    if val == "":
-        upper_t = col_type.upper()
-        if any(k in upper_t for k in ("TIME", "DATE", "INT", "REAL", "FLOAT", "DOUBLE", "NUMERIC")):
+def clean_value_for_postgres(val: Any, col_name_or_type: str = "", col_type: str = "") -> Any:
+    """Converts empty or whitespace strings in timestamps, dates, or numeric columns to None (SQL NULL).
+    Supports both (val, col_type) and (val, col_name, col_type) calling signatures.
+    """
+    if isinstance(val, str):
+        stripped = val.strip()
+        arg1_upper = col_name_or_type.upper()
+        arg2_upper = col_type.upper() if col_type else ""
+
+        # Determine effective type and name across both calling conventions
+        type_str = arg2_upper if arg2_upper else arg1_upper
+        name_str = arg1_upper
+
+        is_date_or_numeric = (
+            any(k in type_str for k in ("TIME", "DATE", "INT", "REAL", "FLOAT", "DOUBLE", "NUMERIC")) or
+            any(k in name_str for k in ("DATE", "TIME", "_AT", "TIMESTAMP", "LATENCY", "COUNT", "SCORE", "RATING", "RANK"))
+        )
+        if not stripped and is_date_or_numeric:
             return None
     return val
 
@@ -212,7 +225,7 @@ def export_to_postgres_sql(sqlite_path: str, output_path: str) -> Dict[str, int]
                 values = []
                 for col_name, val in zip(actual_cols, row):
                     col_t = col_type_map.get(col_name, "")
-                    cleaned_val = clean_value_for_postgres(val, col_t)
+                    cleaned_val = clean_value_for_postgres(val, col_name, col_t)
                     if cleaned_val is None:
                         values.append("NULL")
                     elif isinstance(cleaned_val, (int, float)):
@@ -312,7 +325,18 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
     masked_url = mask_connection_url(normalized_url)
 
     sqlite_conn = sqlite3.connect(sqlite_path)
-    pg_engine = create_engine(normalized_url)
+    pg_engine = create_engine(
+        normalized_url,
+        pool_pre_ping=True,
+        connect_args={
+            "sslmode": "require",
+            "connect_timeout": 30,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
+    )
 
     # 1. Apply DDL statement-by-statement
     print(f"[*] Connecting to PostgreSQL target: {masked_url}")
@@ -320,8 +344,11 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
     ddl_statements = generate_postgres_ddl_list(sqlite_conn)
     with pg_engine.connect() as pg_conn:
         for stmt in ddl_statements:
+            clean_stmt = stmt.strip()
+            if not clean_stmt or clean_stmt.upper() in ("BEGIN;", "COMMIT;"):
+                continue
             try:
-                pg_conn.execute(text(stmt))
+                pg_conn.execute(text(clean_stmt))
                 pg_conn.commit()
             except Exception as e:
                 pg_conn.rollback()
@@ -376,7 +403,7 @@ def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any
             row_dict = {}
             for idx, (col_name, val) in enumerate(zip(actual_cols, row)):
                 col_t = col_type_map.get(col_name, "")
-                cleaned_val = clean_value_for_postgres(val, col_t)
+                cleaned_val = clean_value_for_postgres(val, col_name, col_t)
                 row_dict[f"p_{idx}"] = cleaned_val
             cleaned_data.append(row_dict)
 

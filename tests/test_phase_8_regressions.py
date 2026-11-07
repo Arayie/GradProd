@@ -42,9 +42,14 @@ def test_regression_issue_1_explicit_psycopg2_driver():
     norm2 = normalize_database_url(url2)
     assert norm2.startswith("postgresql+psycopg2://")
 
-    # Already qualified URLs are preserved
+    # Already qualified URLs have sslmode=require enforced
     url3 = "postgresql+psycopg2://user:pass@host/db"
-    assert normalize_database_url(url3) == url3
+    assert normalize_database_url(url3) == "postgresql+psycopg2://user:pass@host/db?sslmode=require"
+
+    # URL with existing sslmode is normalized to require
+    url4 = "postgresql://user:pass@host/db?sslmode=disable"
+    assert "sslmode=require" in normalize_database_url(url4)
+    assert "sslmode=disable" not in normalize_database_url(url4)
 
     # Masking test
     masked = mask_connection_url(norm1)
@@ -81,7 +86,7 @@ def test_regression_issue_3_no_silent_sqlite_fallback():
         assert db.is_postgres is True
         with pytest.raises(RuntimeError) as exc_info:
             db.get_raw_connection()
-        assert "Production PostgreSQL database connection failed" in str(exc_info.value)
+        assert "Production PostgreSQL database connection" in str(exc_info.value)
         # Verify db was NOT silently switched to SQLite
         assert db.is_postgres is True
 
@@ -101,44 +106,54 @@ def test_regression_issue_4_package_initialization():
 
 def test_regression_issue_5_postgres_schema_initialization_safety():
     """Verify PostgreSQL schema initialization checks existence, handles missing files, and propagates errors."""
-    db = DatabaseConnection()
-    db.is_postgres = True
-    db.raw_url = "postgresql://user:pass@host/db"
-
     # Case A: Table already exists (idempotent, no DDL executed)
-    with patch("sqlalchemy.create_engine") as mock_engine_factory:
+    db_a = DatabaseConnection()
+    db_a.is_postgres = True
+    db_a.raw_url = "postgresql://user:pass@host/db"
+
+    with patch.object(db_a, "verify_connection") as mock_verify:
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = mock_conn
         mock_conn.execute.return_value.scalar.return_value = "public.reviews"
-        mock_engine_factory.return_value = mock_engine
+        db_a._engine = mock_engine
 
-        db.initialize_schema()
+        db_a.initialize_schema()
+        assert mock_verify.called
         assert mock_conn.execute.called
 
     # Case B: Table does not exist (empty database, executes DDL from postgres_schema.sql)
-    with patch("sqlalchemy.create_engine") as mock_engine_factory:
+    db_b = DatabaseConnection()
+    db_b.is_postgres = True
+    db_b.raw_url = "postgresql://user:pass@host/db"
+
+    with patch.object(db_b, "verify_connection") as mock_verify:
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = mock_conn
         mock_conn.execute.return_value.scalar.return_value = None  # Not existing
-        mock_engine_factory.return_value = mock_engine
+        db_b._engine = mock_engine
 
-        db.initialize_schema()
+        db_b.initialize_schema()
+        assert mock_verify.called
         # Verify statements were executed
         assert mock_conn.execute.call_count > 1
 
     # Case C: Missing schema file raises FileNotFoundError
+    db_c = DatabaseConnection()
+    db_c.is_postgres = True
     with pytest.raises(FileNotFoundError):
-        db._initialize_postgres_schema(schema_file="/nonexistent/path/postgres_schema.sql")
+        db_c._initialize_postgres_schema(schema_file="/nonexistent/path/postgres_schema.sql")
 
     # Case D: Database connection failure propagates RuntimeError without SQLite fallback
-    with patch("sqlalchemy.create_engine") as mock_engine_factory:
-        mock_engine_factory.side_effect = Exception("Connection timed out")
+    db_d = DatabaseConnection()
+    db_d.is_postgres = True
+    db_d.raw_url = "postgresql://user:pass@host/db"
+    with patch.object(db_d, "verify_connection", side_effect=Exception("Connection timed out")):
         with pytest.raises(RuntimeError) as exc_info:
-            db.initialize_schema()
+            db_d.initialize_schema()
         assert "PostgreSQL schema initialization failed" in str(exc_info.value)
-        assert db.is_postgres is True
+        assert db_d.is_postgres is True
 
 
 def test_regression_issue_6_all_16_pages_render_cleanly():
@@ -203,4 +218,104 @@ def test_regression_issue_7_analytics_independent_imports():
     assert hasattr(analytics.opportunity_scoring, "OpportunityScoringEngine")
     assert hasattr(analytics.retention_modeling, "RetentionHypothesisEngine")
     assert hasattr(analytics.theme_frequency, "ThemeFrequencyEngine")
+
+
+def test_regression_issue_8_ssl_pool_and_retry_lifecycle():
+    """Verify SQLAlchemy engine pool parameters, sslmode=require, secrets handling, and bounded retries."""
+    from database.connection import get_env_database_url
+
+    # 1. Test get_env_database_url with os.environ
+    with patch.dict(os.environ, {"DATABASE_URL": "postgresql://test_user:pass@host/db"}):
+        assert get_env_database_url() == "postgresql://test_user:pass@host/db"
+
+    # 2. Test get_env_database_url with Streamlit secrets fallback
+    with patch.dict(os.environ, {"DATABASE_URL": ""}):
+        mock_st = MagicMock()
+        mock_st.secrets = {"DATABASE_URL": "postgresql://secret_user:pass@render/db"}
+        with patch.dict(sys.modules, {"streamlit": mock_st}):
+            assert get_env_database_url() == "postgresql://secret_user:pass@render/db"
+
+    # 3. Test get_env_database_url with nested Streamlit secrets
+    with patch.dict(os.environ, {"DATABASE_URL": ""}):
+        mock_st = MagicMock()
+        mock_st.secrets = {
+            "postgres": {
+                "user": "pg_user",
+                "password": "pg_pass",
+                "host": "dpg-123.render.com",
+                "port": 5432,
+                "dbname": "growww_discovery"
+            }
+        }
+        with patch.dict(sys.modules, {"streamlit": mock_st}):
+            constructed = get_env_database_url()
+            assert "pg_user:pg_pass@dpg-123.render.com:5432/growww_discovery" in constructed
+            assert "sslmode=require" in constructed
+
+    # 4. Test engine pooling parameters
+    db = DatabaseConnection(db_path="postgresql://user:pass@host:5432/testdb")
+    with patch("sqlalchemy.create_engine") as mock_create_engine:
+        mock_engine = MagicMock()
+        mock_create_engine.return_value = mock_engine
+        engine = db.get_engine()
+        assert engine is mock_engine
+        assert mock_create_engine.called
+        kwargs = mock_create_engine.call_args[1]
+        assert kwargs.get("pool_pre_ping") is True
+        assert kwargs.get("pool_size") == 5
+        assert kwargs.get("max_overflow") == 10
+        assert kwargs.get("pool_recycle") == 300
+        assert kwargs.get("pool_timeout") == 20
+        connect_args = kwargs.get("connect_args", {})
+        assert connect_args.get("sslmode") == "require"
+        assert connect_args.get("connect_timeout") == 15
+        assert connect_args.get("keepalives") == 1
+
+    # 5. Test verify_connection retries on transient errors and fails fast on auth errors
+    db_retry = DatabaseConnection(db_path="postgresql://user:pass@host:5432/testdb")
+    mock_eng = MagicMock()
+    # First attempt raises SSL closed, second attempt succeeds
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.scalar.side_effect = [1, "testdb", "user"]
+    mock_eng.connect.side_effect = [
+        Exception("SSL connection has been closed unexpectedly"),
+        mock_conn
+    ]
+    mock_conn.__enter__.return_value = mock_conn
+    db_retry._engine = mock_eng
+
+    with patch("time.sleep"):
+        res = db_retry.verify_connection(max_retries=3, retry_delay=0.01)
+        assert res["verified"] is True
+        assert res["database"] == "testdb"
+
+    # Test fast failure on authentication error
+    db_auth = DatabaseConnection(db_path="postgresql://user:wrong_pass@host:5432/testdb")
+    mock_eng_auth = MagicMock()
+    mock_eng_auth.connect.side_effect = Exception("password authentication failed for user")
+    db_auth._engine = mock_eng_auth
+    with pytest.raises(RuntimeError) as exc_info:
+        db_auth.verify_connection(max_retries=3, retry_delay=0.01)
+    assert "Database authentication failed" in str(exc_info.value)
+    assert mock_eng_auth.connect.call_count == 1  # Fast-failed without retries
+
+
+def test_regression_issue_9_data_cleaning_timestamp_nullification():
+    """Verify that clean_value_for_postgres converts empty strings to None for timestamp/numeric columns."""
+    from scripts.migrate_sqlite_to_postgres import clean_value_for_postgres
+
+    # Timestamp column with empty string -> converted to None (SQL NULL)
+    assert clean_value_for_postgres("", "review_created_at", "TIMESTAMP") is None
+    assert clean_value_for_postgres("   ", "retrieved_at", "TIMESTAMP") is None
+    assert clean_value_for_postgres("", "pii_processed_at", "TEXT") is None  # Caught by column name
+    assert clean_value_for_postgres("", "latency_ms", "INTEGER") is None
+
+    # Valid values are preserved
+    assert clean_value_for_postgres("2026-11-06 17:00:00", "review_created_at", "TIMESTAMP") == "2026-11-06 17:00:00"
+    assert clean_value_for_postgres(100, "token_count_input", "INTEGER") == 100
+    assert clean_value_for_postgres(0.95, "confidence_score", "REAL") == 0.95
+
+    # Text columns that legitimately allow empty string are preserved
+    assert clean_value_for_postgres("", "source_description", "TEXT") == ""
+
 
