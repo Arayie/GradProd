@@ -44,7 +44,10 @@ class DatabaseConnection:
         if self.is_postgres:
             # PostgreSQL connection adapter via SQLAlchemy
             from sqlalchemy import create_engine
-            engine = create_engine(self.raw_url)
+            normalized_url = self.raw_url
+            if normalized_url.startswith("postgres://"):
+                normalized_url = normalized_url.replace("postgres://", "postgresql://", 1)
+            engine = create_engine(normalized_url)
             return engine.raw_connection()
 
         conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)

@@ -148,28 +148,46 @@ def export_to_postgres_sql(sqlite_path: str, output_path: str) -> Dict[str, int]
 def migrate_to_postgres_instance(sqlite_path: str, pg_url: str) -> Dict[str, Any]:
     """Connects to live PostgreSQL instance and streams data with validation."""
     from sqlalchemy import create_engine, text
+
+    # Normalize Render URL if starts with postgres://
+    if pg_url.startswith("postgres://"):
+        pg_url = pg_url.replace("postgres://", "postgresql://", 1)
+
     sqlite_conn = sqlite3.connect(sqlite_path)
     pg_engine = create_engine(pg_url)
 
     # 1. Apply DDL
+    print("[*] Creating PostgreSQL tables and schema indexes...")
     ddl_sql = generate_postgres_ddl(sqlite_conn)
     with pg_engine.connect() as pg_conn:
         pg_conn.execute(text(ddl_sql))
         pg_conn.commit()
 
-    # 2. Transfer rows
+    # 2. Transfer rows with batch chunking
     counts = {}
     sqlite_cur = sqlite_conn.cursor()
     for table in MIGRATION_TABLES:
+        table_exists = sqlite_cur.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone()
+        if not table_exists:
+            continue
+
         rows = sqlite_cur.execute(f"SELECT * FROM {table};").fetchall()
         counts[table] = len(rows)
         if rows:
+            print(f"[*] Migrating {len(rows)} rows for '{table}'...")
             cols = [desc[0] for desc in sqlite_cur.description]
             placeholders = ", ".join([f":{col}" for col in cols])
             insert_stmt = text(f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING")
             data = [dict(zip(cols, row)) for row in rows]
+            
+            # Batch execute in chunks of 200 to prevent parameter overflow
+            batch_size = 200
             with pg_engine.connect() as pg_conn:
-                pg_conn.execute(insert_stmt, data)
+                for i in range(0, len(data), batch_size):
+                    chunk = data[i:i + batch_size]
+                    pg_conn.execute(insert_stmt, chunk)
                 pg_conn.commit()
 
     sqlite_conn.close()
