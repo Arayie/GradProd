@@ -167,13 +167,13 @@ CREATE TABLE IF NOT EXISTS reviews (
     data_quality_score DOUBLE PRECISION DEFAULT 1.0,
     data_quality_status TEXT DEFAULT 'HIGH_QUALITY',
     data_quality_issues TEXT,
-    ai_enrichment_status TEXT DEFAULT "NOT_ENRICHED",
+    ai_enrichment_status TEXT DEFAULT 'NOT_ENRICHED',
     ai_lifecycle_stage TEXT,
     ai_primary_pain_point TEXT,
     ai_pain_points TEXT,
     ai_confidence_score DOUBLE PRECISION,
     ai_confidence_tier TEXT,
-    ai_adjudication_status TEXT DEFAULT "PENDING",
+    ai_adjudication_status TEXT DEFAULT 'PENDING',
     PRIMARY KEY (id)
 );
 

@@ -74,7 +74,12 @@ def generate_postgres_ddl_list(sqlite_conn: sqlite3.Connection) -> List[str]:
             if notnull:
                 col_def += " NOT NULL"
             if dflt_value is not None:
-                col_def += f" DEFAULT {dflt_value}"
+                dflt_str = str(dflt_value).strip()
+                # Fix SQLite double-quoted defaults (e.g. "NOT_ENRICHED") into PostgreSQL single-quoted strings ('NOT_ENRICHED')
+                if dflt_str.startswith('"') and dflt_str.endswith('"'):
+                    inner = dflt_str[1:-1].replace("'", "''")
+                    dflt_str = f"'{inner}'"
+                col_def += f" DEFAULT {dflt_str}"
             col_defs.append(col_def)
             if pk > 0:
                 pk_cols.append(col_name)
