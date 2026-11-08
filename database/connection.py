@@ -549,6 +549,7 @@ class DatabaseConnection:
 
             missing_tables = [t for t in required_tables if t.lower() not in existing_tables]
             if not missing_tables:
+                self._ensure_postgres_constraints_and_sequences(engine)
                 logging.getLogger("database").info("PostgreSQL schema verified: all 11 required tables exist.")
                 return
 
@@ -590,12 +591,69 @@ class DatabaseConnection:
                 if still_missing:
                     raise RuntimeError(f"PostgreSQL schema initialization incomplete. Missing tables: {still_missing}")
 
+            # 6. Ensure constraints and sequences are idempotently attached
+            self._ensure_postgres_constraints_and_sequences(engine)
+
             logging.getLogger("database").info("PostgreSQL schema initialization completed and verified successfully.")
 
         except Exception as exc:
             masked = mask_connection_url(self.raw_url)
             logging.getLogger("database").error(f"PostgreSQL schema initialization failed on {masked}: {exc}")
             raise RuntimeError(f"PostgreSQL schema initialization failed on {masked}: {exc}") from exc
+
+    def _ensure_postgres_constraints_and_sequences(self, engine):
+        """
+        Idempotently verifies and creates required unique constraints and autoincrement sequences
+        in PostgreSQL (e.g. uq_apps_internal_app_id, uq_source_routes_source_id, uq_checkpoints_composite,
+        and sequences for integer primary key columns).
+        Guarantees that UPSERT statements and inserts omitting integer primary keys succeed
+        without violating NOT NULL or unique constraints on existing and fresh deployments.
+        """
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            existing_constrs = conn.execute(text("""
+                SELECT conname FROM pg_constraint c 
+                JOIN pg_class t ON c.conrelid = t.oid 
+                WHERE t.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
+            """)).fetchall()
+            c_set = {r[0].lower() for r in existing_constrs}
+
+            # 1. Unique constraints required for ON CONFLICT upsert targets
+            if "uq_apps_internal_app_id" not in c_set:
+                conn.execute(text("ALTER TABLE apps ADD CONSTRAINT uq_apps_internal_app_id UNIQUE (internal_app_id);"))
+            if "uq_source_routes_source_id" not in c_set:
+                conn.execute(text("ALTER TABLE source_routes ADD CONSTRAINT uq_source_routes_source_id UNIQUE (source_id);"))
+            if "uq_checkpoints_composite" not in c_set:
+                conn.execute(text("ALTER TABLE collection_checkpoints ADD CONSTRAINT uq_checkpoints_composite UNIQUE (app_id, storefront, collection_method);"))
+
+            # 2. Sequences for autoincrement primary keys
+            tables_and_pks = [
+                ("apps", "id", "apps_id_seq"),
+                ("source_routes", "id", "source_routes_id_seq"),
+                ("collection_checkpoints", "id", "collection_checkpoints_id_seq"),
+                ("reviews", "id", "reviews_id_seq"),
+                ("collection_errors", "error_id", "collection_errors_error_id_seq"),
+                ("human_adjudications", "adjudication_id", "human_adjudications_adjudication_id_seq"),
+                ("opportunity_audits", "audit_id", "opportunity_audits_audit_id_seq"),
+            ]
+
+            for table, pk_col, seq_name in tables_and_pks:
+                t_exists = conn.execute(text(
+                    "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = :t"
+                ), {"t": table}).scalar()
+                if not t_exists:
+                    continue
+
+                conn.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name};"))
+                col_default = conn.execute(text(
+                    "SELECT column_default FROM information_schema.columns WHERE table_name = :t AND column_name = :c"
+                ), {"t": table, "c": pk_col}).scalar()
+                if not col_default:
+                    conn.execute(text(f'ALTER TABLE "{table}" ALTER COLUMN "{pk_col}" SET DEFAULT nextval(\'{seq_name}\');'))
+
+                max_val = conn.execute(text(f'SELECT COALESCE(MAX("{pk_col}"), 0) FROM "{table}";')).scalar()
+                max_val_int = int(max_val) if max_val is not None else 0
+                conn.execute(text(f"SELECT setval('{seq_name}', {max_val_int + 1}, false);"))
 
     def migrate_phase_3_columns(self):
         """Idempotently adds Phase 3 standardization, language, relevance, and quality columns."""

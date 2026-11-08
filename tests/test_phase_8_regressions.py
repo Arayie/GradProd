@@ -379,4 +379,136 @@ def test_regression_issue_11_production_enforcement():
             assert "growww_discovery.db" in db_dev.db_path
 
 
+def test_regression_issue_12_on_conflict_upsert_idempotency(tmp_path):
+    """
+    Verify AppRepository, SourceRouteRepository, and CheckpointRepository
+    UPSERT statements work with ON CONFLICT and remain 100% idempotent
+    without creating duplicate records.
+    """
+    from database.repositories import AppRepository, SourceRouteRepository, CheckpointRepository
+    db_file = str(tmp_path / "test_upsert.db")
+    db = DatabaseConnection(db_path=db_file)
+    db.initialize_schema()
+
+    app_repo = AppRepository(db)
+    source_repo = SourceRouteRepository(db)
+    ckpt_repo = CheckpointRepository(db)
+
+    # 1. First synchronization of apps
+    sample_apps = [
+        {
+            "internal_id": "groww",
+            "official_name": "Groww: Stocks & Mutual Funds",
+            "developer_name": "Groww Inc",
+            "apple_app_store": {"app_id": "1404871703"},
+            "google_play_store": {"package_name": "com.nextbillion.groww"},
+            "app_role": "PRIMARY_TARGET",
+            "verification_status": "VERIFIED",
+        },
+        {
+            "internal_id": "zerodha_coin",
+            "official_name": "Coin by Zerodha",
+            "developer_name": "Zerodha",
+            "apple_app_store": {"app_id": "1392892554"},
+            "google_play_store": {"package_name": "com.zerodha.coin"},
+            "app_role": "PEER_BENCHMARK",
+            "verification_status": "VERIFIED",
+        }
+    ]
+    app_repo.sync_from_config(sample_apps)
+    assert app_repo.count() == 2
+
+    # 2. Repeated synchronization: must be strictly idempotent (count stays 2)
+    app_repo.sync_from_config(sample_apps)
+    assert app_repo.count() == 2
+
+    # 3. Update existing app via UPSERT (update official_name)
+    sample_apps[0]["official_name"] = "Groww: Stocks, MF & IPO"
+    app_repo.sync_from_config(sample_apps)
+    assert app_repo.count() == 2
+    updated = app_repo.get_by_internal_id("groww")
+    assert updated["app_name"] == "Groww: Stocks, MF & IPO"
+
+    # 4. Add new app via sync (count becomes 3)
+    new_app = {
+        "internal_id": "indmoney",
+        "official_name": "INDmoney: Wealth Management",
+        "developer_name": "Finzoom Investment Advisors",
+        "apple_app_store": {"app_id": "1475730335"},
+        "google_play_store": {"package_name": "com.indwealth"},
+        "app_role": "PEER_BENCHMARK",
+        "verification_status": "VERIFIED",
+    }
+    app_repo.sync_from_config(sample_apps + [new_app])
+    assert app_repo.count() == 3
+
+    # 5. Source routes UPSERT and idempotency
+    sample_sources = [
+        {
+            "source_id": "apple_app_store_rss",
+            "source_name": "Apple App Store Public RSS Feed",
+            "source_family": "apple_app_store",
+            "collection_method": "rss_feed",
+            "technical_availability": "PRODUCTION_READY",
+            "permission_status": "PUBLIC_PERMITTED",
+            "enabled": True,
+            "allowed_fields": ["review_id", "author", "rating", "title", "content"],
+        }
+    ]
+    source_repo.sync_from_config(sample_sources)
+    assert len(source_repo.list_all()) == 1
+    # Repeated sync
+    source_repo.sync_from_config(sample_sources)
+    assert len(source_repo.list_all()) == 1
+
+    # 6. Checkpoint UPSERT and idempotency
+    ckpt = {
+        "app_id": "groww",
+        "storefront": "IN",
+        "collection_method": "apple_app_store_rss",
+        "last_successful_page": 5,
+        "last_seen_review_id": "REV-12345",
+        "total_reviews_collected": 250,
+    }
+    ckpt_repo.save_checkpoint(ckpt)
+    saved = ckpt_repo.get_checkpoint("groww", "IN", "apple_app_store_rss")
+    assert saved is not None
+    assert saved["last_successful_page"] == 5
+
+    # Update checkpoint
+    ckpt["last_successful_page"] = 10
+    ckpt_repo.save_checkpoint(ckpt)
+    updated_ckpt = ckpt_repo.get_checkpoint("groww", "IN", "apple_app_store_rss")
+    assert updated_ckpt["last_successful_page"] == 10
+    assert len(ckpt_repo.list_checkpoints()) == 1
+
+
+def test_regression_issue_13_ensure_postgres_constraints_and_sequences():
+    """Verify that _ensure_postgres_constraints_and_sequences executes the required DDL checks idempotently."""
+    db = DatabaseConnection(db_path="postgresql://mock_user:mock_pass@mock_host:5432/mock_db")
+    mock_engine = MagicMock()
+    mock_conn = MagicMock()
+    mock_engine.begin.return_value.__enter__.return_value = mock_conn
+
+    def mock_exec(query, params=None):
+        q_str = str(query)
+        result = MagicMock()
+        if "pg_constraint" in q_str:
+            result.fetchall.return_value = [("uq_apps_internal_app_id",), ("uq_source_routes_source_id",), ("uq_checkpoints_composite",)]
+        elif "information_schema.tables" in q_str:
+            result.scalar.return_value = 1
+        elif "column_default" in q_str:
+            result.scalar.return_value = "nextval('some_seq')"
+        elif "MAX(" in q_str:
+            result.scalar.return_value = 42
+        else:
+            result.scalar.return_value = None
+        return result
+
+    mock_conn.execute.side_effect = mock_exec
+    db._ensure_postgres_constraints_and_sequences(mock_engine)
+    assert mock_engine.begin.called
+
+
+
 

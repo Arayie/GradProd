@@ -5,8 +5,8 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS "apps" (
-    "id" INTEGER,
-    "internal_app_id" TEXT NOT NULL,
+    "id" SERIAL,
+    "internal_app_id" TEXT UNIQUE NOT NULL,
     "app_name" TEXT NOT NULL,
     "developer_name" TEXT NOT NULL,
     "apple_app_id" TEXT,
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS "apps" (
 );
 
 CREATE TABLE IF NOT EXISTS "source_routes" (
-    "id" INTEGER,
-    "source_id" TEXT NOT NULL,
+    "id" SERIAL,
+    "source_id" TEXT UNIQUE NOT NULL,
     "source_name" TEXT NOT NULL,
     "store" TEXT NOT NULL,
     "collection_method" TEXT NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS "ingestion_runs" (
 );
 
 CREATE TABLE IF NOT EXISTS "collection_errors" (
-    "error_id" INTEGER,
+    "error_id" SERIAL,
     "run_id" TEXT,
     "source_name" TEXT NOT NULL,
     "error_type" TEXT NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "collection_errors" (
 );
 
 CREATE TABLE IF NOT EXISTS "collection_checkpoints" (
-    "id" INTEGER,
+    "id" SERIAL,
     "app_id" TEXT NOT NULL,
     "storefront" TEXT NOT NULL DEFAULT 'IN',
     "collection_method" TEXT NOT NULL,
@@ -97,11 +97,12 @@ CREATE TABLE IF NOT EXISTS "collection_checkpoints" (
     "total_reviews_collected" INTEGER DEFAULT 0,
     "checkpoint_data" TEXT,
     "updated_at" TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("id"),
+    CONSTRAINT uq_checkpoints_composite UNIQUE ("app_id", "storefront", "collection_method")
 );
 
 CREATE TABLE IF NOT EXISTS "reviews" (
-    "id" INTEGER,
+    "id" SERIAL,
     "evidence_id" TEXT NOT NULL,
     "store" TEXT NOT NULL,
     "app_id" TEXT NOT NULL,
@@ -229,7 +230,7 @@ CREATE TABLE IF NOT EXISTS "ai_evidence_log" (
 );
 
 CREATE TABLE IF NOT EXISTS "human_adjudications" (
-    "adjudication_id" INTEGER,
+    "adjudication_id" SERIAL,
     "evidence_id" TEXT NOT NULL,
     "enrichment_id" TEXT NOT NULL,
     "adjudicator_id" TEXT NOT NULL,
@@ -270,7 +271,7 @@ CREATE TABLE IF NOT EXISTS "opportunities" (
 );
 
 CREATE TABLE IF NOT EXISTS "opportunity_audits" (
-    "audit_id" INTEGER,
+    "audit_id" SERIAL,
     "opportunity_id" TEXT NOT NULL,
     "actor_id" TEXT NOT NULL,
     "previous_status" TEXT NOT NULL,
