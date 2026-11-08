@@ -105,8 +105,13 @@ def test_regression_issue_4_package_initialization():
 
 
 def test_regression_issue_5_postgres_schema_initialization_safety():
-    """Verify PostgreSQL schema initialization checks existence, handles missing files, and propagates errors."""
-    # Case A: Table already exists (idempotent, no DDL executed)
+    """Verify PostgreSQL schema initialization checks all tables, handles missing files, and propagates errors."""
+    required_tables = [
+        "apps", "source_routes", "import_batches", "ingestion_runs", "collection_errors",
+        "collection_checkpoints", "reviews", "ai_evidence_log", "human_adjudications",
+        "opportunities", "opportunity_audits"
+    ]
+    # Case A: All 11 tables already exist (idempotent, no DDL executed)
     db_a = DatabaseConnection()
     db_a.is_postgres = True
     db_a.raw_url = "postgresql://user:pass@host/db"
@@ -115,29 +120,44 @@ def test_regression_issue_5_postgres_schema_initialization_safety():
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_engine.connect.return_value.__enter__.return_value = mock_conn
-        mock_conn.execute.return_value.scalar.return_value = "public.reviews"
+        # Return all 11 table names
+        mock_conn.execute.return_value.fetchall.return_value = [(t,) for t in [
+            "apps", "source_routes", "import_batches", "ingestion_runs", "collection_errors",
+            "collection_checkpoints", "reviews", "ai_evidence_log", "human_adjudications",
+            "opportunities", "opportunity_audits"
+        ]]
         db_a._engine = mock_engine
 
         db_a.initialize_schema()
         assert mock_verify.called
         assert mock_conn.execute.called
 
-    # Case B: Table does not exist (empty database, executes DDL from postgres_schema.sql)
+    # Case B: Tables do not exist (empty database, executes DDL via engine.begin())
     db_b = DatabaseConnection()
     db_b.is_postgres = True
     db_b.raw_url = "postgresql://user:pass@host/db"
 
     with patch.object(db_b, "verify_connection") as mock_verify:
         mock_engine = MagicMock()
-        mock_conn = MagicMock()
-        mock_engine.connect.return_value.__enter__.return_value = mock_conn
-        mock_conn.execute.return_value.scalar.return_value = None  # Not existing
+        mock_check_conn = MagicMock()
+        mock_ddl_conn = MagicMock()
+        mock_verify_conn = MagicMock()
+
+        # Connect returns empty initially, then all tables post-DDL
+        mock_check_conn.execute.return_value.fetchall.return_value = []
+        mock_verify_conn.execute.return_value.fetchall.return_value = [(t,) for t in [
+            "apps", "source_routes", "import_batches", "ingestion_runs", "collection_errors",
+            "collection_checkpoints", "reviews", "ai_evidence_log", "human_adjudications",
+            "opportunities", "opportunity_audits"
+        ]]
+        mock_engine.connect.return_value.__enter__.side_effect = [mock_check_conn, mock_verify_conn]
+        mock_engine.begin.return_value.__enter__.return_value = mock_ddl_conn
         db_b._engine = mock_engine
 
         db_b.initialize_schema()
         assert mock_verify.called
-        # Verify statements were executed
-        assert mock_conn.execute.call_count > 1
+        assert mock_engine.begin.called
+        assert mock_ddl_conn.execute.call_count > 1
 
     # Case C: Missing schema file raises FileNotFoundError
     db_c = DatabaseConnection()
@@ -317,5 +337,46 @@ def test_regression_issue_9_data_cleaning_timestamp_nullification():
 
     # Text columns that legitimately allow empty string are preserved
     assert clean_value_for_postgres("", "source_description", "TEXT") == ""
+
+
+def test_regression_issue_10_safe_diagnostics():
+    """Verify safe diagnostics report host, db, driver, sslmode, source without exposing credentials."""
+    from database.connection import get_connection_diagnostics
+
+    pg_url = "postgresql://my_secret_user:super_secret_password@dpg-dbnlt0bbc2fs73fgp3g0-a.singapore-postgres.render.com:5432/growww_discovery?sslmode=require"
+    diag = get_connection_diagnostics(pg_url, "streamlit_secrets")
+
+    assert diag["hostname"] == "dpg-dbnlt0bbc2fs73fgp3g0-a.singapore-postgres.render.com"
+    assert diag["port"] == 5432
+    assert diag["database"] == "growww_discovery"
+    assert diag["driver"] == "postgresql+psycopg2"
+    assert diag["sslmode"] == "require"
+    assert diag["source"] == "streamlit_secrets"
+
+    # Confirm sensitive credentials are NOT anywhere in the diagnostic output
+    diag_str = str(diag)
+    assert "super_secret_password" not in diag_str
+    assert "my_secret_user" not in diag_str
+
+
+def test_regression_issue_11_production_enforcement():
+    """Verify missing DATABASE_URL in production raises a clear configuration error without SQLite fallback."""
+    from database.connection import is_production_environment
+
+    # In production without PostgreSQL DATABASE_URL -> raises RuntimeError
+    with patch("database.connection.is_production_environment", return_value=True):
+        with patch("database.connection.get_env_database_url_with_source", return_value=("", "none")):
+            with pytest.raises(RuntimeError) as exc_info:
+                DatabaseConnection()
+            assert "Production environment detected" in str(exc_info.value)
+            assert "cannot run on SQLite" in str(exc_info.value)
+
+    # In local development without PostgreSQL -> smoothly falls back to SQLite
+    with patch("database.connection.is_production_environment", return_value=False):
+        with patch("database.connection.get_env_database_url_with_source", return_value=("", "none")):
+            db_dev = DatabaseConnection()
+            assert db_dev.is_postgres is False
+            assert "growww_discovery.db" in db_dev.db_path
+
 
 

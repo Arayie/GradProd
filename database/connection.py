@@ -86,6 +86,19 @@ class ConnectionWrapper:
         cur.execute(sql, *args, **kwargs)
         return cur
 
+    def commit(self):
+        if hasattr(self._raw_conn, "commit"):
+            self._raw_conn.commit()
+
+    def rollback(self):
+        if hasattr(self._raw_conn, "rollback"):
+            self._raw_conn.rollback()
+
+    def close(self):
+        """Returns the underlying connection back to the connection pool."""
+        if hasattr(self._raw_conn, "close"):
+            self._raw_conn.close()
+
     def __getattr__(self, name):
         return getattr(self._raw_conn, name)
 
@@ -122,32 +135,28 @@ def normalize_database_url(url: str) -> str:
 
     return urlunsplit((scheme, parts.netloc, parts.path, new_query, parts.fragment))
 
-def get_env_database_url() -> str:
+def get_env_database_url_with_source() -> tuple:
     """
-    Retrieves DATABASE_URL from environment variables or Streamlit secrets.
+    Retrieves DATABASE_URL and its configuration source ('environment' vs 'streamlit_secrets').
     Safely inspects st.secrets if available without raising when running outside Streamlit.
     """
-    url = os.getenv("DATABASE_URL", "").strip()
-    if url:
-        return url
-
-    # Inspect Streamlit Cloud secrets if available
+    # 1. Inspect Streamlit Cloud secrets first if available
     try:
         import streamlit as st
         if hasattr(st, "secrets"):
             if "DATABASE_URL" in st.secrets:
                 val = str(st.secrets["DATABASE_URL"]).strip()
                 if val:
-                    return val
+                    return val, "streamlit_secrets"
             # Check nested dictionary structures e.g. [postgres] or [database]
             for sec_key in ("postgres", "database", "postgresql", "render"):
                 if sec_key in st.secrets:
                     sec = st.secrets[sec_key]
                     if isinstance(sec, dict):
                         if "url" in sec and sec["url"]:
-                            return str(sec["url"]).strip()
+                            return str(sec["url"]).strip(), "streamlit_secrets"
                         if "DATABASE_URL" in sec and sec["DATABASE_URL"]:
-                            return str(sec["DATABASE_URL"]).strip()
+                            return str(sec["DATABASE_URL"]).strip(), "streamlit_secrets"
                         # Assemble components if separate
                         if "host" in sec and ("user" in sec or "username" in sec):
                             user = sec.get("user") or sec.get("username")
@@ -155,11 +164,89 @@ def get_env_database_url() -> str:
                             host = sec.get("host")
                             port = sec.get("port", 5432)
                             dbname = sec.get("dbname") or sec.get("database", "growww_discovery")
-                            return f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{dbname}?sslmode=require"
+                            return f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{dbname}?sslmode=require", "streamlit_secrets"
     except Exception:
         pass
 
-    return ""
+    # 2. Inspect environment variables
+    url = os.getenv("DATABASE_URL", "").strip()
+    if url:
+        return url, "environment"
+
+    return "", "none"
+
+def get_env_database_url() -> str:
+    """
+    Retrieves DATABASE_URL from environment variables or Streamlit secrets.
+    Safely inspects st.secrets if available without raising when running outside Streamlit.
+    """
+    return get_env_database_url_with_source()[0]
+
+def is_production_environment() -> bool:
+    """Detects whether running in production mode (via IS_PRODUCTION, Streamlit Cloud mount, or production env vars)."""
+    if os.getenv("IS_PRODUCTION", "").lower() in ("true", "1", "yes"):
+        return True
+    # Streamlit Cloud deployment environment marker
+    if os.path.exists("/mount/src"):
+        return True
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets"):
+            if str(st.secrets.get("IS_PRODUCTION", "")).lower() in ("true", "1", "yes"):
+                return True
+            if str(st.secrets.get("APP_ENV", "")).lower() == "production" and not os.getenv("TESTING"):
+                return True
+            if str(st.secrets.get("ENVIRONMENT", "")).lower() == "production" and not os.getenv("TESTING"):
+                return True
+    except Exception:
+        pass
+    return False
+
+def get_connection_diagnostics(url: str = None, source: str = None) -> Dict[str, Any]:
+    """
+    Returns safe database connection diagnostics without exposing credentials.
+    Reports:
+    - Database hostname
+    - Database port
+    - Database name
+    - Selected driver
+    - SSL mode
+    - Configuration source (environment vs streamlit_secrets)
+    Never exposes passwords, usernames, or sensitive connection strings.
+    """
+    if url is None:
+        url, detected_source = get_env_database_url_with_source()
+        source = source or detected_source
+
+    if not url:
+        return {
+            "hostname": "localhost",
+            "port": None,
+            "database": DEFAULT_DB_PATH,
+            "driver": "sqlite3",
+            "sslmode": None,
+            "source": source or "local_default",
+        }
+
+    norm = normalize_database_url(url)
+    parts = urlsplit(norm)
+    netloc = parts.netloc
+    host_port = netloc.split("@")[-1] if "@" in netloc else netloc
+    hostname = host_port.split(":")[0] if ":" in host_port else host_port
+    port = int(host_port.split(":")[1]) if ":" in host_port and host_port.split(":")[1].isdigit() else 5432
+    dbname = parts.path.lstrip("/")
+    driver = parts.scheme
+    query_params = parse_qs(parts.query)
+    sslmode = query_params.get("sslmode", ["require"])[0]
+
+    return {
+        "hostname": hostname,
+        "port": port,
+        "database": dbname,
+        "driver": driver,
+        "sslmode": sslmode,
+        "source": source or "unknown",
+    }
 
 class ManagedConnectionContext:
     """Provides a managed connection supporting both context manager usage and direct method access."""
@@ -218,12 +305,19 @@ class DatabaseConnection:
     """Manages SQLite / PostgreSQL database connections, pooling, verification, and schema setup."""
 
     def __init__(self, db_path: str = None):
-        env_url = get_env_database_url()
+        self.url_source = "default"
+        env_url, detected_source = get_env_database_url_with_source()
+
         if db_path and (db_path.startswith("postgres://") or db_path.startswith("postgresql://") or db_path.startswith("postgresql+")):
             self.raw_url = db_path
-        else:
+            self.url_source = "explicit_argument"
+        elif env_url:
             self.raw_url = env_url
-            
+            self.url_source = detected_source
+        else:
+            self.raw_url = ""
+            self.url_source = "none"
+
         self.is_postgres = (
             self.raw_url.startswith("postgres://") or
             self.raw_url.startswith("postgresql://") or
@@ -231,6 +325,16 @@ class DatabaseConnection:
         )
         self.db_path = db_path or parse_database_url(self.raw_url)
         self._engine = None
+
+        # Missing DATABASE_URL in production raises a clear configuration error.
+        # Production never silently falls back to SQLite.
+        if is_production_environment() and not self.is_postgres:
+            raise RuntimeError(
+                "Production environment detected (APP_ENV=production or Streamlit Cloud) but no valid "
+                "PostgreSQL DATABASE_URL was found in Streamlit secrets or environment variables. "
+                "Production cannot run on SQLite. Please configure DATABASE_URL in Streamlit secrets."
+            )
+
         if not self.is_postgres:
             self._ensure_directory()
 
@@ -239,6 +343,18 @@ class DatabaseConnection:
         directory = os.path.dirname(self.db_path)
         if directory and not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
+
+    def get_diagnostics(self) -> Dict[str, Any]:
+        """Returns safe database diagnostics for logging and verification."""
+        return get_connection_diagnostics(self.raw_url, self.url_source)
+
+    def log_diagnostics(self):
+        """Logs safe database configuration diagnostics without exposing credentials."""
+        diag = self.get_diagnostics()
+        logging.getLogger("database").info(
+            f"Database Configuration Diagnostics: Host='{diag['hostname']}', Port={diag['port']}, "
+            f"DB='{diag['database']}', Driver='{diag['driver']}', SSL='{diag['sslmode']}', Source='{diag['source']}'"
+        )
 
     def get_engine(self):
         """Returns cached SQLAlchemy Engine with configured connection pool and SSL settings."""
@@ -263,7 +379,22 @@ class DatabaseConnection:
                     "keepalives_count": 5,
                 }
             )
+            self.log_diagnostics()
         return self._engine
+
+    def dispose_engine(self):
+        """Safely closes all pooled connections and disposes the SQLAlchemy engine."""
+        if self._engine is not None:
+            try:
+                self._engine.dispose()
+            except Exception as exc:
+                logging.getLogger("database").warning(f"Error disposing SQLAlchemy engine: {exc}")
+            finally:
+                self._engine = None
+
+    def close(self):
+        """Disposes the cached engine and releases connection resources."""
+        self.dispose_engine()
 
     def verify_connection(self, max_retries: int = 3, retry_delay: float = 2.0) -> Dict[str, Any]:
         """
@@ -372,7 +503,11 @@ class DatabaseConnection:
         self.migrate_phase_3_columns()
 
     def _initialize_postgres_schema(self, schema_file: str = None):
-        """Ensures PostgreSQL schema tables and indexes exist without dropping existing data."""
+        """
+        Ensures PostgreSQL schema tables and indexes exist without dropping existing data.
+        Verifies all 11 required tables before deciding whether DDL execution is needed.
+        Uses clean SQLAlchemy 2.x transaction management with engine.begin().
+        """
         from sqlalchemy import text
 
         if schema_file is None:
@@ -390,35 +525,72 @@ class DatabaseConnection:
             raise RuntimeError(f"PostgreSQL schema initialization failed on {masked}: {exc}") from exc
 
         engine = self.get_engine()
+        required_tables = [
+            "apps",
+            "source_routes",
+            "import_batches",
+            "ingestion_runs",
+            "collection_errors",
+            "collection_checkpoints",
+            "reviews",
+            "ai_evidence_log",
+            "human_adjudications",
+            "opportunities",
+            "opportunity_audits",
+        ]
+
         try:
-            with engine.connect() as conn:
-                # 2. Idempotency Check: check if tables already exist
-                table_exists = conn.execute(text("SELECT to_regclass('public.reviews');")).scalar()
-                if table_exists:
-                    return
+            # 2. Comprehensive Idempotency Check: inspect all 11 required tables
+            with engine.connect() as check_conn:
+                existing_res = check_conn.execute(
+                    text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
+                ).fetchall()
+                existing_tables = {row[0].lower() for row in existing_res}
 
-                # 3. If completely empty database, execute DDL statements individually from schema_file
-                with open(schema_file, "r", encoding="utf-8") as f:
-                    ddl_content = f.read()
+            missing_tables = [t for t in required_tables if t.lower() not in existing_tables]
+            if not missing_tables:
+                logging.getLogger("database").info("PostgreSQL schema verified: all 11 required tables exist.")
+                return
 
-                statements = []
-                current_stmt = []
-                for line in ddl_content.splitlines():
-                    stripped = line.strip()
-                    if not stripped or stripped.startswith("--"):
-                        continue
-                    if stripped.upper() in ("BEGIN;", "COMMIT;"):
-                        continue
-                    current_stmt.append(line)
-                    if stripped.endswith(";"):
-                        stmt_text = "\n".join(current_stmt).strip()
-                        if stmt_text:
-                            statements.append(stmt_text)
-                        current_stmt = []
+            logging.getLogger("database").info(
+                f"PostgreSQL schema missing tables: {missing_tables}. Applying postgres_schema.sql..."
+            )
 
-                with conn.begin():
-                    for stmt in statements:
-                        conn.execute(text(stmt))
+            # 3. Read DDL statements from postgres_schema.sql
+            with open(schema_file, "r", encoding="utf-8") as f:
+                ddl_content = f.read()
+
+            statements = []
+            current_stmt = []
+            for line in ddl_content.splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("--"):
+                    continue
+                if stripped.upper() in ("BEGIN;", "COMMIT;"):
+                    continue
+                current_stmt.append(line)
+                if stripped.endswith(";"):
+                    stmt_text = "\n".join(current_stmt).strip()
+                    if stmt_text:
+                        statements.append(stmt_text)
+                    current_stmt = []
+
+            # 4. Execute DDL in a clean transaction using engine.begin() (SQLAlchemy 2.x standard)
+            with engine.begin() as ddl_conn:
+                for stmt in statements:
+                    ddl_conn.execute(text(stmt))
+
+            # 5. Verify that all required tables now exist
+            with engine.connect() as verify_conn:
+                post_res = verify_conn.execute(
+                    text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
+                ).fetchall()
+                post_tables = {row[0].lower() for row in post_res}
+                still_missing = [t for t in required_tables if t.lower() not in post_tables]
+                if still_missing:
+                    raise RuntimeError(f"PostgreSQL schema initialization incomplete. Missing tables: {still_missing}")
+
+            logging.getLogger("database").info("PostgreSQL schema initialization completed and verified successfully.")
 
         except Exception as exc:
             masked = mask_connection_url(self.raw_url)
