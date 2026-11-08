@@ -17,7 +17,7 @@ if REPO_ROOT not in sys.path:
 import streamlit as st
 from core.database_manager import get_database_manager
 from core.auth import AuthService
-from ui.navigation import apply_custom_styles, render_sidebar
+from ui.navigation import apply_custom_styles, render_navigation
 
 # Phase 6 Full Page Suite
 from ui.pages import (
@@ -44,7 +44,7 @@ st.set_page_config(
     page_title="GROWWW – Investor Discovery Engine",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 def init_app():
@@ -59,7 +59,7 @@ def main():
     """Main routing and execution function."""
     init_app()
     apply_custom_styles()
-    current_page = render_sidebar()
+    current_page = render_navigation()
 
     # SECTION 1: OVERVIEW
     if current_page in ("Executive Overview", "Overview"):

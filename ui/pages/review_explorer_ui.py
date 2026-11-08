@@ -110,7 +110,11 @@ def render():
             r.ai_primary_pain_point, r.ai_confidence_score, r.ai_adjudication_status,
             r.review_title, r.review_text
         {base_query}
-        GROUP BY r.evidence_id
+        GROUP BY 
+            r.evidence_id, r.app_name, r.store, r.star_rating, r.review_created_at,
+            r.language_detected, r.sip_relevance_status, r.ai_lifecycle_stage,
+            r.ai_primary_pain_point, r.ai_confidence_score, r.ai_adjudication_status,
+            r.review_title, r.review_text
         ORDER BY r.review_created_at DESC
         LIMIT 1000
         """
@@ -142,9 +146,17 @@ def render():
         r.review_title, r.review_text, r.review_text_original,
         r.ai_lifecycle_stage, r.ai_primary_pain_point, r.ai_confidence_score,
         r.ai_confidence_tier, r.ai_adjudication_status,
-        e.evidence_spans, e.model_id, e.prompt_hash, e.taxonomy_version
+        MAX(e.evidence_spans) as evidence_spans,
+        MAX(e.model_id) as model_id,
+        MAX(e.prompt_hash) as prompt_hash,
+        MAX(e.taxonomy_version) as taxonomy_version
     {base_query}
-    GROUP BY r.evidence_id
+    GROUP BY 
+        r.evidence_id, r.app_name, r.store, r.star_rating, r.review_created_at,
+        r.app_version, r.language_detected, r.sip_relevance_status,
+        r.review_title, r.review_text, r.review_text_original,
+        r.ai_lifecycle_stage, r.ai_primary_pain_point, r.ai_confidence_score,
+        r.ai_confidence_tier, r.ai_adjudication_status
     ORDER BY r.review_created_at DESC
     LIMIT {page_size} OFFSET {offset}
     """

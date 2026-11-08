@@ -510,5 +510,106 @@ def test_regression_issue_13_ensure_postgres_constraints_and_sequences():
     assert mock_engine.begin.called
 
 
+def test_regression_issue_14_source_manager_and_review_explorer_group_by(tmp_path):
+    """
+    Verify that the SQL GROUP BY queries in Source Manager and Review Explorer
+    include all non-aggregate selected expressions and execute without GroupingError.
+    """
+    db_file = str(tmp_path / "test_group_by.db")
+    db = DatabaseConnection(db_path=db_file)
+    db.initialize_schema()
+
+    with db.get_connection() as conn:
+        cur = conn.cursor()
+
+        # 1. Source Manager Query (Line 41-52)
+        source_manager_query = """
+        SELECT 
+            a.internal_app_id, a.app_name, a.apple_app_id, a.apple_listing_url,
+            COUNT(r.id) as reviews_stored,
+            MIN(r.review_created_at) as oldest_review,
+            MAX(r.review_created_at) as newest_review
+        FROM apps a
+        LEFT JOIN reviews r ON a.internal_app_id = r.app_id AND r.store = 'apple_app_store'
+        GROUP BY a.internal_app_id, a.app_name, a.apple_app_id, a.apple_listing_url
+        ORDER BY reviews_stored DESC
+        """
+        cur.execute(source_manager_query)
+        sm_rows = cur.fetchall()
+        assert isinstance(sm_rows, list)
+
+        # 2. Review Explorer Query (Line 138-151)
+        review_explorer_query = """
+        SELECT 
+            r.evidence_id, r.app_name, r.store, r.star_rating, r.review_created_at,
+            r.app_version, r.language_detected, r.sip_relevance_status,
+            r.review_title, r.review_text, r.review_text_original,
+            r.ai_lifecycle_stage, r.ai_primary_pain_point, r.ai_confidence_score,
+            r.ai_confidence_tier, r.ai_adjudication_status,
+            MAX(e.evidence_spans) as evidence_spans,
+            MAX(e.model_id) as model_id,
+            MAX(e.prompt_hash) as prompt_hash,
+            MAX(e.taxonomy_version) as taxonomy_version
+        FROM reviews r
+        LEFT JOIN ai_evidence_log e ON r.evidence_id = e.evidence_id
+        WHERE r.eligibility_status = 'ELIGIBLE'
+        GROUP BY 
+            r.evidence_id, r.app_name, r.store, r.star_rating, r.review_created_at,
+            r.app_version, r.language_detected, r.sip_relevance_status,
+            r.review_title, r.review_text, r.review_text_original,
+            r.ai_lifecycle_stage, r.ai_primary_pain_point, r.ai_confidence_score,
+            r.ai_confidence_tier, r.ai_adjudication_status
+        ORDER BY r.review_created_at DESC
+        LIMIT 10 OFFSET 0
+        """
+        cur.execute(review_explorer_query)
+        re_rows = cur.fetchall()
+        assert isinstance(re_rows, list)
+
+
+def test_regression_issue_15_groww_brand_and_logo_assets():
+    """Verify that Groww logo assets exist, SVG loads, encodes to base64, and generates valid HTML."""
+    from ui.brand import get_groww_logo_data_uri, get_groww_logo_html, LOGO_SVG_PATH, LOGO_PNG_PATH
+
+    assert os.path.exists(LOGO_SVG_PATH), f"SVG logo not found at {LOGO_SVG_PATH}"
+    assert os.path.exists(LOGO_PNG_PATH), f"PNG logo not found at {LOGO_PNG_PATH}"
+
+    data_uri = get_groww_logo_data_uri()
+    assert data_uri.startswith("data:image/svg+xml;base64,")
+    assert len(data_uri) > 100
+
+    logo_html = get_groww_logo_html(height=34)
+    assert "<img" in logo_html
+    assert "data:image/svg+xml;base64," in logo_html
+
+
+def test_regression_issue_16_simplified_navigation_all_16_pages():
+    """Verify that NAVIGATION_GROUPS organizes all 16 pages into the 4 logical groups without omission."""
+    from ui.navigation import NAVIGATION_GROUPS, PAGE_TO_GROUP, ALL_PAGE_NAMES
+
+    # 4 Required Navigation Groups
+    expected_groups = ["Overview", "Research & Data", "Intelligence", "Governance"]
+    assert list(NAVIGATION_GROUPS.keys()) == expected_groups
+
+    # Exactly 16 distinct pages
+    assert len(ALL_PAGE_NAMES) == 16
+    assert len(PAGE_TO_GROUP) == 16
+
+    # Verify group assignments match Part 2 specifications
+    assert [p[0] for p in NAVIGATION_GROUPS["Overview"]["pages"]] == ["Executive Overview"]
+    assert [p[0] for p in NAVIGATION_GROUPS["Research & Data"]["pages"]] == [
+        "Source Manager", "Collection History", "Review Explorer",
+        "SIP Data Quality", "SIP Journey Explorer", "Investor Behaviour"
+    ]
+    assert [p[0] for p in NAVIGATION_GROUPS["Intelligence"]["pages"]] == [
+        "Theme Explorer", "App Comparison", "Opportunity Radar",
+        "Opportunity Detail", "12M Retention Simulator"
+    ]
+    assert [p[0] for p in NAVIGATION_GROUPS["Governance"]["pages"]] == [
+        "AI Evidence Log", "Model Validation", "Human Validation", "Exports & Reports"
+    ]
+
+
+
 
 

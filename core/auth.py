@@ -324,9 +324,9 @@ class AuthService:
         role_color = role_colors.get(cls.get_current_role(), "#64748B")
         st.sidebar.markdown(
             f"""
-            <div style="background-color: {role_color}18; border-left: 3px solid {role_color}; padding: 0.35rem 0.6rem; border-radius: 4px; font-size: 0.78rem; color: #1E293B; margin-top: 0.25rem;">
-                <strong>Role:</strong> {cls.get_current_role().value}<br/>
-                <strong>User:</strong> {cls.get_current_user()}
+            <div style="background-color: {role_color}22; border-left: 3px solid {role_color}; padding: 0.45rem 0.65rem; border-radius: 6px; font-size: 0.82rem; color: #F8FAFC; margin-top: 0.4rem; border: 1px solid {role_color}44;">
+                <strong style="color: {role_color};">Role:</strong> {cls.get_current_role().value}<br/>
+                <strong style="color: #94A3B8;">User:</strong> {cls.get_current_user()}
             </div>
             """,
             unsafe_allow_html=True,

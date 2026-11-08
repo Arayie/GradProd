@@ -46,7 +46,7 @@ def render():
             MAX(r.review_created_at) as newest_review
         FROM apps a
         LEFT JOIN reviews r ON a.internal_app_id = r.app_id AND r.store = 'apple_app_store'
-        GROUP BY a.internal_app_id
+        GROUP BY a.internal_app_id, a.app_name, a.apple_app_id, a.apple_listing_url
         ORDER BY reviews_stored DESC
         """
         cursor.execute(query)

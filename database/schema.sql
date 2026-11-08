@@ -124,6 +124,15 @@ CREATE TABLE IF NOT EXISTS reviews (
     data_quality_score REAL DEFAULT 1.0,               -- 0.0 to 1.0
     data_quality_status TEXT DEFAULT 'HIGH_QUALITY',    -- HIGH_QUALITY, ACCEPTABLE, LOW_QUALITY, BLOCKED
     data_quality_issues TEXT,                          -- JSON array of quality issues
+
+    -- AI Enrichment Attributes (Phase 4-5)
+    ai_enrichment_status TEXT DEFAULT 'NOT_ENRICHED',
+    ai_lifecycle_stage TEXT,
+    ai_primary_pain_point TEXT,
+    ai_pain_points TEXT,
+    ai_confidence_score REAL,
+    ai_confidence_tier TEXT,
+    ai_adjudication_status TEXT DEFAULT 'PENDING',
     
     -- Governance and eligibility
     eligibility_status TEXT NOT NULL DEFAULT 'PENDING',  -- 'ELIGIBLE', 'PENDING', 'REJECTED', 'SYNTHETIC_DEMO'
