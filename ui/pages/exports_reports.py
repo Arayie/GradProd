@@ -11,38 +11,35 @@ import sqlite3
 from core.database_manager import get_database_manager
 from core.auth import AuthService, Permission
 from services.pdf_export_service import PDFExportService
+from ui.navigation import render_header
+from ui.brand import NAVY_CARD, NAVY_BORDER, TEXT_PRIMARY, TEXT_SECONDARY, GROWW_GREEN
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Exports & Reports</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Exports and Research Reports</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Download standardized research datasets, executive PDF dossiers, and reproducible audit logs.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Exports and Research Reports",
+        "Download standardized research datasets, executive PDF dossiers, and reproducible audit logs."
+    )
 
     can_export_raw = AuthService.can_export_raw_data()
     can_export_reports = AuthService.can_export_reports()
     current_role = AuthService.get_current_role()
 
-    # Role status card
-    st.markdown(f"""
-        <div style="background-color: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase;">Active Session Role</span>
-                    <div style="font-size: 1.15rem; font-weight: 800; color: #1E3A2F;">{current_role.value}</div>
-                </div>
-                <div style="text-align: right; font-size: 0.85rem; color: #334155;">
-                    <div>Raw Review Export: <strong>{'ALLOWED' if can_export_raw else 'RESTRICTED (Viewer Role)'}</strong></div>
-                    <div>Executive Reports & Analytics: <strong>{'ALLOWED' if can_export_reports else 'RESTRICTED'}</strong></div>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    # Role status card matching Groww dark fintech theme
+    st.markdown(
+        f'<div style="background-color: {NAVY_CARD}; border: 1px solid {NAVY_BORDER}; border-radius: 10px; padding: 0.9rem 1.2rem; margin-bottom: 1.25rem;">'
+        f'<div style="display: flex; justify-content: space-between; align-items: center;">'
+        f'<div>'
+        f'<span style="font-size: 0.75rem; font-weight: 700; color: {TEXT_SECONDARY}; text-transform: uppercase; letter-spacing: 0.05em;">Active Session Role</span>'
+        f'<div style="font-size: 1.15rem; font-weight: 800; color: {GROWW_GREEN};">{current_role.value}</div>'
+        f'</div>'
+        f'<div style="text-align: right; font-size: 0.85rem; color: {TEXT_SECONDARY};">'
+        f'<div>Raw Review Export: <strong style="color: {TEXT_PRIMARY};">{"ALLOWED" if can_export_raw else "RESTRICTED (Viewer Role)"}</strong></div>'
+        f'<div>Executive Reports & Analytics: <strong style="color: {TEXT_PRIMARY};">{"ALLOWED" if can_export_reports else "RESTRICTED"}</strong></div>'
+        f'</div>'
+        f'</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
     tab_pdf, tab_analytics, tab_raw = st.tabs([
         "📄 Executive PDF Reports",

@@ -9,25 +9,21 @@ import sqlite3
 import os
 from analytics.benchmarking import CrossAppBenchmarkEngine
 from core.database_manager import get_database_manager
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • App Comparison</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Cross-Platform Competitor Research</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Comparing Groww against peer Indian platforms across 11 core research friction dimensions.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Cross-Platform Competitor Research",
+        "Comparing Groww against peer Indian platforms across 11 core research friction dimensions."
+    )
 
-    st.markdown("""
-        <div class="demo-banner">
-            <strong>COMPARISON BOUNDARY:</strong> Store reviews reflect public feedback and relative friction signals, 
-            not overall market share, financial stability, or total transactional volume.
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="demo-banner">'
+        '<strong>COMPARISON BOUNDARY:</strong> Store reviews reflect public feedback and relative friction signals, '
+        'not overall market share, financial stability, or total transactional volume.'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     tab_apple, tab_gplay = st.tabs(["Apple App Store India (Active)", "Google Play Store (Import Tracking)"])
 

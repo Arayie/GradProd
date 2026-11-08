@@ -8,27 +8,23 @@ import streamlit as st
 import pandas as pd
 import os
 from analytics.retention_modeling import RetentionHypothesisEngine
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Retention Modeling</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">12-Month First-SIP Continuation Modeling</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Modeling the theoretical impact of friction-removal product interventions on the 12-Month First-SIP Active Rate.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "12-Month First-SIP Continuation Modeling",
+        "Modeling the theoretical impact of friction-removal product interventions on the 12-Month First-SIP Active Rate."
+    )
 
     # Governance Notice
-    st.markdown("""
-        <div class="demo-banner">
-            <strong>RESEARCH GOVERNANCE DISCLAIMER:</strong> This simulator operates strictly as an independent qualitative 
-            discovery hypothesis model based on customer friction observed in public reviews. It does <strong>NOT</strong> 
-            represent internal Groww customer database cohorts, audited financial ledgers, or definitive proof of cohort retention.
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="demo-banner">'
+        '<strong>RESEARCH GOVERNANCE DISCLAIMER:</strong> This simulator operates strictly as an independent qualitative '
+        'discovery hypothesis model based on customer friction observed in public reviews. It does <strong>NOT</strong> '
+        'represent internal Groww customer database cohorts, audited financial ledgers, or definitive proof of cohort retention.'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     csv_path = "outputs/sip_retention_hypotheses.csv"
     if not os.path.exists(csv_path):

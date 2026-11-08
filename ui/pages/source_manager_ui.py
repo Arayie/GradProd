@@ -10,18 +10,13 @@ import yaml
 import os
 from core.database_manager import get_database_manager
 from core.auth import AuthService
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Source Manager</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Source Configuration & Route Governance</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Monitoring approved free-tier collection channels across Apple App Store RSS and verified Google Play CSV imports.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Source Configuration & Route Governance",
+        "Monitoring approved free-tier collection channels across Apple App Store RSS and verified Google Play CSV imports."
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()
@@ -39,14 +34,26 @@ def render():
         st.caption("Active free-tier syndication channel. Maximum 500 reviews per application without authentication credentials.")
 
         query = """
+        WITH review_agg AS (
+            SELECT 
+                app_id,
+                COUNT(id) as reviews_stored,
+                MIN(review_created_at) as oldest_review,
+                MAX(review_created_at) as newest_review
+            FROM reviews
+            WHERE store = 'apple_app_store'
+            GROUP BY app_id
+        )
         SELECT 
-            a.internal_app_id, a.app_name, a.apple_app_id, a.apple_listing_url,
-            COUNT(r.id) as reviews_stored,
-            MIN(r.review_created_at) as oldest_review,
-            MAX(r.review_created_at) as newest_review
+            a.internal_app_id,
+            a.app_name,
+            a.apple_app_id,
+            a.apple_listing_url,
+            COALESCE(r.reviews_stored, 0) as reviews_stored,
+            r.oldest_review,
+            r.newest_review
         FROM apps a
-        LEFT JOIN reviews r ON a.internal_app_id = r.app_id AND r.store = 'apple_app_store'
-        GROUP BY a.internal_app_id, a.app_name, a.apple_app_id, a.apple_listing_url
+        LEFT JOIN review_agg r ON a.internal_app_id = r.app_id
         ORDER BY reviews_stored DESC
         """
         cursor.execute(query)

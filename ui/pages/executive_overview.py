@@ -46,17 +46,18 @@ def render():
 
     col_h1, col_h2 = st.columns([3, 1])
     with col_h1:
-        st.markdown(f"""
-            <div style="margin-bottom: 0.5rem;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <h2 style="margin: 0; font-size: 1.65rem; font-weight: 800; color: {TEXT_PRIMARY};">Executive Insights Dashboard</h2>
-                    <span style="background-color: rgba(0, 208, 156, 0.12); color: {GROWW_GREEN}; border: 1px solid rgba(0, 208, 156, 0.3); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">LIVE INTELLIGENCE</span>
-                </div>
-                <div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-top: 4px;">
-                    Research Period: <strong style="color: {TEXT_PRIMARY};">{earliest_str}</strong> to <strong style="color: {TEXT_PRIMARY};">{latest_str}</strong> • Covering <strong style="color: {GROWW_GREEN};">8 Leading Investment Apps</strong> in India
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="margin-bottom: 0.5rem;">'
+            f'<div style="display: flex; align-items: center; gap: 10px;">'
+            f'<h2 style="margin: 0; font-size: 1.65rem; font-weight: 800; color: {TEXT_PRIMARY};">Executive Insights Dashboard</h2>'
+            f'<span style="background-color: rgba(0, 208, 156, 0.12); color: {GROWW_GREEN}; border: 1px solid rgba(0, 208, 156, 0.3); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">LIVE INTELLIGENCE</span>'
+            f'</div>'
+            f'<div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-top: 4px;">'
+            f'Research Period: <strong style="color: {TEXT_PRIMARY};">{earliest_str}</strong> to <strong style="color: {TEXT_PRIMARY};">{latest_str}</strong> • Covering <strong style="color: {GROWW_GREEN};">8 Leading Investment Apps</strong> in India'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
     with col_h2:
         st.markdown('<div style="display: flex; justify-content: flex-end; align-items: center; height: 100%;">', unsafe_allow_html=True)
@@ -140,12 +141,13 @@ def render():
     # =========================================================================
     # SECTION C: THREE VISUALLY BALANCED ANALYTICS CARDS
     # =========================================================================
-    st.markdown(f"""
-        <div class="groww-card-header" style="margin-top: 0.5rem;">
-            <span>Core Empirical Trends</span>
-            <span style="font-size: 0.8rem; color: {TEXT_MUTED}; font-weight: normal;">Cross-Platform Synthesis</span>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="groww-card-header" style="margin-top: 0.5rem;">'
+        f'<span>Core Empirical Trends</span>'
+        f'<span style="font-size: 0.8rem; color: {TEXT_MUTED}; font-weight: normal;">Cross-Platform Synthesis</span>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
     col_chart1, col_chart2, col_chart3 = st.columns([1.4, 1.3, 1.1])
 
@@ -153,11 +155,11 @@ def render():
     # Chart 1: SIP Customer Satisfaction Trend
     # -------------------------------------------------------------------------
     with col_chart1:
-        st.markdown(f"""
-            <div style="background-color: {NAVY_CARD}; border: 1px solid {NAVY_BORDER}; border-radius: 12px; padding: 1rem 1.1rem; height: 100%;">
-                <div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">1. SIP Customer Satisfaction Trend</div>
-                <div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Quarterly Average Star Rating (1.0 to 5.0)</div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">1. SIP Customer Satisfaction Trend</div>'
+            f'<div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Quarterly Average Star Rating (1.0 to 5.0)</div>',
+            unsafe_allow_html=True
+        )
 
         cursor.execute("""
             SELECT review_created_at, star_rating 
@@ -203,17 +205,15 @@ def render():
         else:
             st.info("Insufficient timestamped review data.")
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
     # -------------------------------------------------------------------------
     # Chart 2: SIP Pain Point Intensity
     # -------------------------------------------------------------------------
     with col_chart2:
-        st.markdown(f"""
-            <div style="background-color: {NAVY_CARD}; border: 1px solid {NAVY_BORDER}; border-radius: 12px; padding: 1rem 1.1rem; height: 100%;">
-                <div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">2. SIP Pain Point Intensity</div>
-                <div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Verified Friction Volume by Theme</div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">2. SIP Pain Point Intensity</div>'
+            f'<div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Verified Friction Volume by Theme</div>',
+            unsafe_allow_html=True
+        )
 
         if os.path.exists(theme_csv):
             df_themes = pd.read_csv(theme_csv).head(5)
@@ -245,17 +245,15 @@ def render():
         else:
             st.info("Theme dataset not available.")
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
     # -------------------------------------------------------------------------
     # Chart 3: Android vs iOS Feedback Distribution
     # -------------------------------------------------------------------------
     with col_chart3:
-        st.markdown(f"""
-            <div style="background-color: {NAVY_CARD}; border: 1px solid {NAVY_BORDER}; border-radius: 12px; padding: 1rem 1.1rem; height: 100%;">
-                <div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">3. Storefront Ingestion Mix</div>
-                <div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Apple RSS vs Google Play Imports</div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.95rem;">3. Storefront Ingestion Mix</div>'
+            f'<div style="color: {TEXT_MUTED}; font-size: 0.78rem; margin-bottom: 0.5rem;">Apple RSS vs Google Play Imports</div>',
+            unsafe_allow_html=True
+        )
 
         # Store distribution query
         cursor.execute("""
@@ -299,19 +297,18 @@ def render():
         fig_store.update_layout(layout_store)
         st.plotly_chart(fig_store, use_container_width=True, config={"displayModeBar": False})
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
     st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
 
     # =========================================================================
     # SECTION D: STRUCTURED EXECUTIVE INSIGHTS (EVIDENCE-BASED)
     # =========================================================================
-    st.markdown(f"""
-        <div class="groww-card-header">
-            <span>Executive Evidence Syntheses</span>
-            <span style="font-size: 0.8rem; color: {GROWW_GREEN}; font-weight: 600;">5 Strategic Pillars</span>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="groww-card-header">'
+        f'<span>Executive Evidence Syntheses</span>'
+        f'<span style="font-size: 0.8rem; color: {GROWW_GREEN}; font-weight: 600;">5 Strategic Pillars</span>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
     tab_i1, tab_i2, tab_i3, tab_i4, tab_i5 = st.tabs([
         "⚠️ Frequent SIP Complaints",
@@ -404,15 +401,13 @@ def render():
 
     # Insight 4: Most Affected Applications
     with tab_i4:
-        st.markdown(f"""
-            <div class="groww-card">
-                <div style="font-size: 1.05rem; font-weight: 700; color: {TEXT_PRIMARY}; margin-bottom: 0.5rem;">
-                    Comparative Friction Across Top Indian Platforms
-                </div>
-                <div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-bottom: 1rem;">
-                    Platform review volume and relative SIP complaint intensity based on verified dataset evidence:
-                </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-size: 1.05rem; font-weight: 700; color: {TEXT_PRIMARY}; margin-bottom: 0.5rem;">'
+            f'Comparative Friction Across Top Indian Platforms</div>'
+            f'<div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-bottom: 1rem;">'
+            f'Platform review volume and relative SIP complaint intensity based on verified dataset evidence:</div>',
+            unsafe_allow_html=True
+        )
 
         cursor.execute("""
             SELECT 
@@ -440,19 +435,16 @@ def render():
             })
 
         st.dataframe(pd.DataFrame(app_summary_data), use_container_width=True, hide_index=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Insight 5: Actionable Opportunities
     with tab_i5:
-        st.markdown(f"""
-            <div class="groww-card">
-                <div style="font-size: 1.05rem; font-weight: 700; color: {TEXT_PRIMARY}; margin-bottom: 0.5rem;">
-                    Top Prioritized Product Interventions
-                </div>
-                <div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-bottom: 1rem;">
-                    Mathematically scored opportunities ready for engineering and design execution:
-                </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-size: 1.05rem; font-weight: 700; color: {TEXT_PRIMARY}; margin-bottom: 0.5rem;">'
+            f'Top Prioritized Product Interventions</div>'
+            f'<div style="color: {TEXT_SECONDARY}; font-size: 0.88rem; margin-bottom: 1rem;">'
+            f'Mathematically scored opportunities ready for engineering and design execution:</div>',
+            unsafe_allow_html=True
+        )
 
         cursor.execute("""
             SELECT priority_rank, opportunity_id, title, opportunity_score, lifecycle_stage, problem_statement, proposed_intervention
@@ -462,39 +454,39 @@ def render():
         """)
         opp_rows = cursor.fetchall()
         for opp in opp_rows:
-            st.markdown(f"""
-                <div style="background-color: #0E1526; border: 1px solid {NAVY_BORDER}; border-left: 4px solid {GROWW_GREEN}; border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 0.65rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.92rem;">
-                            #{opp['priority_rank']} [{opp['opportunity_id']}] {opp['title']}
-                        </span>
-                        <span style="background-color: rgba(0, 208, 156, 0.15); color: {GROWW_GREEN}; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; font-size: 0.78rem;">
-                            Score: {float(opp['opportunity_score']):.2f}
-                        </span>
-                    </div>
-                    <div style="color: {TEXT_SECONDARY}; font-size: 0.82rem; margin-top: 4px;">
-                        <strong style="color: {TEXT_MUTED};">Problem:</strong> {opp['problem_statement'][:140]}...
-                    </div>
-                    <div style="color: {GROWW_GREEN}; font-size: 0.82rem; margin-top: 3px;">
-                        <strong style="color: {TEXT_MUTED};">Intervention:</strong> {opp['proposed_intervention'][:140]}...
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background-color: #0E1526; border: 1px solid {NAVY_BORDER}; border-left: 4px solid {GROWW_GREEN}; border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 0.65rem;">'
+                f'<div style="display: flex; justify-content: space-between; align-items: center;">'
+                f'<span style="font-weight: 700; color: {TEXT_PRIMARY}; font-size: 0.92rem;">'
+                f'#{opp["priority_rank"]} [{opp["opportunity_id"]}] {opp["title"]}'
+                f'</span>'
+                f'<span style="background-color: rgba(0, 208, 156, 0.15); color: {GROWW_GREEN}; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; font-size: 0.78rem;">'
+                f'Score: {float(opp["opportunity_score"]):.2f}'
+                f'</span>'
+                f'</div>'
+                f'<div style="color: {TEXT_SECONDARY}; font-size: 0.82rem; margin-top: 4px;">'
+                f'<strong style="color: {TEXT_MUTED};">Problem:</strong> {opp["problem_statement"][:140]}...'
+                f'</div>'
+                f'<div style="color: {GROWW_GREEN}; font-size: 0.82rem; margin-top: 3px;">'
+                f'<strong style="color: {TEXT_MUTED};">Intervention:</strong> {opp["proposed_intervention"][:140]}...'
+                f'</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
     # =========================================================================
     # PART 4 REQUIREMENT: EXPANDABLE SECTION FOR DETAILED INFORMATION
     # =========================================================================
     with st.expander("🔍 Detailed Dataset Health & Research Governance Provenance"):
-        st.markdown(f"""
-            <div style="color: {TEXT_SECONDARY}; font-size: 0.86rem; line-height: 1.5; margin-bottom: 0.8rem;">
-                <strong>METHODOLOGICAL BOUNDARIES & SAMPLING INTEGRITY:</strong><br/>
-                • <strong>Public Reviews as Qualitative Discovery:</strong> Store reviews capture unprompted organic friction points, not verified account balances or CRM retention curves.<br/>
-                • <strong>Storefront Velocity Divergence:</strong> High-velocity apps like Groww feature a 500-review RSS horizon of ~63 days, while low-velocity peers cover multiple calendar years.<br/>
-                • <strong>Zero Automated Scraping:</strong> Ingestion uses sanctioned public syndication feeds (Apple App Store RSS) and verified manual CSV imports for Google Play.
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="color: {TEXT_SECONDARY}; font-size: 0.86rem; line-height: 1.5; margin-bottom: 0.8rem;">'
+            f'<strong>METHODOLOGICAL BOUNDARIES & SAMPLING INTEGRITY:</strong><br/>'
+            f'• <strong>Public Reviews as Qualitative Discovery:</strong> Store reviews capture unprompted organic friction points, not verified account balances or CRM retention curves.<br/>'
+            f'• <strong>Storefront Velocity Divergence:</strong> High-velocity apps like Groww feature a 500-review RSS horizon of ~63 days, while low-velocity peers cover multiple calendar years.<br/>'
+            f'• <strong>Zero Automated Scraping:</strong> Ingestion uses sanctioned public syndication feeds (Apple App Store RSS) and verified manual CSV imports for Google Play.'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
         c_g1, c_g2, c_g3, c_g4 = st.columns(4)
         with c_g1:

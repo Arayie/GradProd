@@ -9,18 +9,13 @@ import altair as alt
 import os
 from services.opportunity_service import OpportunityService
 from core.auth import AuthService, Permission
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Opportunity Discovery</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Opportunity Radar</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Strategic prioritization matrix scoring high-leverage product interventions across SIP lifecycle stages.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Opportunity Radar",
+        "Strategic prioritization matrix scoring high-leverage product interventions across SIP lifecycle stages."
+    )
 
     service = OpportunityService()
     opportunities = service.get_all_opportunities()

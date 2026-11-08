@@ -10,6 +10,7 @@ import sqlite3
 import html
 from services.opportunity_service import OpportunityService
 from core.auth import AuthService, Permission
+from ui.navigation import render_header
 
 def render():
     service = OpportunityService()
@@ -26,16 +27,10 @@ def render():
     if default_id not in opp_map:
         default_id = opp_keys[0]
 
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Opportunity Dossier</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Opportunity Detail</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Evidence-grounded opportunity specification, problem breakdown, intervention design, and audited lifecycle governance.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Opportunity Detail",
+        "Evidence-grounded opportunity specification, problem breakdown, intervention design, and audited lifecycle governance."
+    )
 
     # Opportunity Selector Dropdown
     selected_id = st.selectbox(

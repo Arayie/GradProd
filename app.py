@@ -55,58 +55,43 @@ def init_app():
         AuthService.init_session()
         st.session_state.db_initialized = True
 
+PAGE_MAP = {
+    # Group 1: Overview
+    "Executive Overview": executive_overview.render,
+    "Overview": executive_overview.render,
+    # Group 2: Research & Data
+    "Source Manager": source_manager_ui.render,
+    "Collection History": collection_history_ui.render,
+    "Review Explorer": review_explorer_ui.render,
+    "SIP Data Quality": sip_quality.render,
+    "SIP Journey Explorer": sip_journey_explorer.render,
+    "Investor Behaviour": investor_behaviour.render,
+    # Group 3: Intelligence
+    "Theme Explorer": theme_explorer.render,
+    "App Comparison": app_comparison.render,
+    "Opportunity Radar": opportunity_radar.render,
+    "Opportunity Detail": opportunity_detail.render,
+    "12M Retention Simulator": retention_model_ui.render,
+    # Group 4: Governance
+    "AI Evidence Log": ai_evidence_log_ui.render,
+    "Model Validation": model_validation_ui.render,
+    "Human Validation": human_validation_ui.render,
+    "Exports & Reports": exports_reports.render,
+    "Exports and Reports": exports_reports.render,
+}
+
 def main():
     """Main routing and execution function."""
     init_app()
     apply_custom_styles()
     current_page = render_navigation()
 
-    # SECTION 1: OVERVIEW
-    if current_page in ("Executive Overview", "Overview"):
-        executive_overview.render()
-
-    # SECTION 2: DATA & SOURCES
-    elif current_page == "Source Manager":
-        source_manager_ui.render()
-    elif current_page == "Collection History":
-        collection_history_ui.render()
-    elif current_page == "Review Explorer":
-        review_explorer_ui.render()
-    elif current_page == "SIP Data Quality":
-        sip_quality.render()
-
-    # SECTION 3: RESEARCH & INSIGHTS
-    elif current_page == "SIP Journey Explorer":
-        sip_journey_explorer.render()
-    elif current_page == "Investor Behaviour":
-        investor_behaviour.render()
-    elif current_page == "Theme Explorer":
-        theme_explorer.render()
-    elif current_page == "App Comparison":
-        app_comparison.render()
-
-    # SECTION 4: OPPORTUNITY DISCOVERY
-    elif current_page == "Opportunity Radar":
-        opportunity_radar.render()
-    elif current_page == "Opportunity Detail":
-        opportunity_detail.render()
-    elif current_page == "12M Retention Simulator":
-        retention_model_ui.render()
-
-    # SECTION 5: AI & VALIDATION
-    elif current_page == "AI Evidence Log":
-        ai_evidence_log_ui.render()
-    elif current_page == "Model Validation":
-        model_validation_ui.render()
-    elif current_page == "Human Validation":
-        human_validation_ui.render()
-
-    # SECTION 6: REPORTS & EXPORTS
-    elif current_page in ("Exports & Reports", "Exports and Reports"):
-        exports_reports.render()
-
+    render_fn = PAGE_MAP.get(current_page)
+    if render_fn:
+        render_fn()
     else:
-        st.error(f"Unknown page route: {current_page}")
+        st.error(f"Unknown page route: '{current_page}'. Defaulting to Executive Overview.")
+        executive_overview.render()
 
 if __name__ == "__main__":
     main()

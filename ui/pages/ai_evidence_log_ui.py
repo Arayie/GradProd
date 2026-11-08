@@ -10,18 +10,13 @@ import sqlite3
 import html
 from core.database_manager import get_database_manager
 from core.auth import AuthService, Permission
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Audit Trail</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">AI Evidence Log</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Immutable, reproducible audit trail linking classifications, prompt hashes, verbatim spans, and human corrections.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "AI Evidence Log",
+        "Immutable, reproducible audit trail linking classifications, prompt hashes, verbatim spans, and human corrections."
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()

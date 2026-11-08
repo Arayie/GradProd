@@ -10,18 +10,13 @@ import json
 import os
 from analytics.theme_frequency import ThemeFrequencyEngine
 from core.database_manager import get_database_manager
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Theme Explorer</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">SIP Pain-Point Theme Analytics</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                In-depth exploration of 29 canonical SIP friction themes, recurrence patterns, and grounded verbatim evidence.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "SIP Pain-Point Theme Analytics",
+        "In-depth exploration of 29 canonical SIP friction themes, recurrence patterns, and grounded verbatim evidence."
+    )
 
     csv_path = "outputs/theme_frequencies.csv"
     if not os.path.exists(csv_path):

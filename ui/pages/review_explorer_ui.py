@@ -11,18 +11,13 @@ import math
 import html
 from core.database_manager import get_database_manager
 from core.auth import AuthService
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Review Explorer</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Research Review Explorer</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Browse, filter, and inspect canonical review records, exact verbatim evidence spans, and provenance metadata.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Research Review Explorer",
+        "Browse, filter, and inspect canonical review records, exact verbatim evidence spans, and provenance metadata."
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()

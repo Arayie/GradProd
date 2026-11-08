@@ -10,18 +10,13 @@ import sqlite3
 import json
 from collections import Counter
 from core.database_manager import get_database_manager
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Investor Behaviour</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Investor Behaviour & Coping Mechanisms</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Empirical synthesis of motivations, expectations, behavioral actions, triggers, and outside-app coping workarounds.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Investor Behaviour & Coping Mechanisms",
+        "Empirical synthesis of motivations, expectations, behavioral actions, triggers, and outside-app coping workarounds."
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()

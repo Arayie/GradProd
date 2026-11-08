@@ -9,18 +9,13 @@ import sqlite3
 import os
 from core.database_manager import get_database_manager
 from core.auth import AuthService
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Collection History</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Ingestion Runs & History</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Historical audit trail of all automated batch collection and manual CSV import sessions.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Ingestion Runs & History",
+        "Historical audit trail of all automated batch collection and manual CSV import sessions."
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()

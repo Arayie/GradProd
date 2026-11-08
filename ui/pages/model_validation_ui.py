@@ -8,18 +8,13 @@ import json
 import os
 import pandas as pd
 import altair as alt
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Evaluation & Quality Gates</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Model Validation</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Empirical validation of the AI enrichment pipeline against held-out human-adjudicated gold standard (N=150).
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Model Validation",
+        "Empirical validation of the AI enrichment pipeline against held-out human-adjudicated gold standard (N=150)."
+    )
 
     metrics_file = "outputs/model_evaluation_metrics.json"
     if not os.path.exists(metrics_file):

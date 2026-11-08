@@ -10,18 +10,13 @@ import sqlite3
 from services.human_review_service import HumanReviewService
 from ai.schema_validator import SchemaValidator
 from core.auth import AuthService, Permission
+from ui.navigation import render_header
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • Human Validation</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">Human Validation</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Audit AI predictions, adjudicate low-confidence classifications, and build gold-standard validation ground truth.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "Human Validation",
+        "Audit AI predictions, adjudicate low-confidence classifications, and build gold-standard validation ground truth."
+    )
 
     reviewer = HumanReviewService()
 

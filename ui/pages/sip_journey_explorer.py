@@ -9,6 +9,7 @@ import sqlite3
 import json
 import os
 from core.database_manager import get_database_manager
+from ui.navigation import render_header
 
 LIFECYCLE_STAGES = [
     ("S0_DISCOVERY", "S0 Discovery & Evaluation", "Exploring funds, app onboarding, comparing peers, beginner questions."),
@@ -22,23 +23,18 @@ LIFECYCLE_STAGES = [
 ]
 
 def render():
-    st.markdown("""
-        <div>
-            <div class="groww-brand-title">GROWWW</div>
-            <div class="groww-brand-subtitle">AI-Powered Investor Discovery Engine • SIP Journey Explorer</div>
-            <h2 style="color: #0F172A; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.2rem;">8-Stage SIP Lifecycle Journey</h2>
-            <p style="color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Longitudinal analysis of customer friction, behaviours, triggers, and outcomes across the complete SIP lifecycle.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    render_header(
+        "8-Stage SIP Lifecycle Journey",
+        "Longitudinal analysis of customer friction, behaviours, triggers, and outcomes across the complete SIP lifecycle."
+    )
 
-    st.markdown("""
-        <div class="demo-banner">
-            <strong>LONGITUDINAL RESEARCH BOUNDARY:</strong> Customer app reviews represent independent public signals from different users. 
-            They are categorized into contextual lifecycle stages based on explicit text evidence, not audited account ledgers.
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="demo-banner">'
+        '<strong>LONGITUDINAL RESEARCH BOUNDARY:</strong> Customer app reviews represent independent public signals from different users. '
+        'They are categorized into contextual lifecycle stages based on explicit text evidence, not audited account ledgers.'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     db_mgr = get_database_manager()
     conn = db_mgr.get_connection()
