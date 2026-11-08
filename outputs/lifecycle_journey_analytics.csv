@@ -2,9 +2,9 @@ stage_code,stage_name,review_count,share_pct,average_star_rating,negative_rating
 S0_DISCOVERY,S0 Discovery & Onboarding,10,0.65,1.4,80.0,UNRESOLVED_COMPLAINT,8,0.0,5.0
 S1_SETUP,S1 Mandate & Autopay Setup,6,0.39,3.67,33.3,NO_PAIN_POINT_STATED,0,0.0,10.0
 S2_EARLY,S2 First Payment & Allotment,0,0.0,0.0,0.0,NONE,0,0.0,9.5
-S3_HABIT,S3 Habitual Recurring Debits,22,1.43,1.55,81.8,UNRESOLVED_COMPLAINT,18,0.0,6.5
+S3_HABIT,S3 Habitual Recurring Debits,22,1.42,1.55,81.8,UNRESOLVED_COMPLAINT,18,0.0,6.5
 S4_REVIEW,S4 Expansion & Step-Up SIP,16,1.04,2.75,37.5,UNRESOLVED_COMPLAINT,2,0.0,5.0
-S5_FRICTION,S5 Friction & Date Modification,17,1.1,1.0,100.0,SIP_PAUSE_DIFFICULTY,17,100.0,8.5
+S5_FRICTION,S5 Friction & Date Modification,18,1.17,1.0,100.0,SIP_PAUSE_DIFFICULTY,18,100.0,8.5
 S6_PAUSE_STOP,S6 Cancellation & Redemption,6,0.39,2.0,66.7,UNRESOLVED_COMPLAINT,2,100.0,8.0
 S7_RESTART,S7 Resumption & Restart,0,0.0,0.0,0.0,NONE,0,0.0,7.0
-GENERAL_INVESTMENT,General Mutual Fund Feedback,778,50.42,2.28,64.0,UNRESOLVED_COMPLAINT,431,0.0,4.0
+GENERAL_INVESTMENT,General Mutual Fund Feedback,778,50.39,2.28,64.0,UNRESOLVED_COMPLAINT,431,0.0,4.0
